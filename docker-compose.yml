@@ -1,0 +1,47 @@
+version: "2"
+
+services:
+
+  s3proxy:
+    image: mirakl/s3proxy
+    ports:
+      - "8080:8080"
+    depends_on:
+      - minio
+      - rsyslog
+    environment:
+      - "AWS_REGION=eu-west-1"
+      - "S3PROXY_USE_MINIO=minio:9000"
+      - "S3PROXY_MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE"
+      - "S3PROXY_MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+      - "S3PROXY_USE_RSYSLOG=rsyslog:514"
+      - "S3PROXY_API_KEY=3f300bdc-0028-11e8-ba89-0ed5f89f718b"
+    command: s3proxy
+
+  rsyslog:
+    image: voxxit/rsyslog
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./test/.minio/data:/export
+      - ./test/.minio/config:/root/.minio
+    environment:
+      - "MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE"
+      - "MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+    command: server /export
+
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY;
+      /usr/bin/mc rm -r --force myminio/s3proxy-bucket;
+      /usr/bin/mc mb myminio/s3proxy-bucket;
+      /usr/bin/mc policy download myminio/s3proxy-bucket;
+      exit 0;
+      "

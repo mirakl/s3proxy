@@ -1,0 +1,5 @@
+.DS_Store
+.idea
+s3proxy
+*.iml
+test
