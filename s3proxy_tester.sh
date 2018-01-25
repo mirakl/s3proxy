@@ -26,12 +26,15 @@ BUCKET="s3proxy-bucket"
 FOLDER="folder-\${RANDOM}"
 KEY="\${FOLDER}/\${FILE}"
 
+
 # Get a presigned URL for an upload
 JSON=\$(curl -H "Authorization: \${API_KEY}" -X POST http://s3proxy:8080/api/v1/presigned/url/\${BUCKET}/\${KEY})
 UPLOAD_URL=\$(echo "\${JSON}" | jq -r '.url')
 HTTP_CODE=\$(curl -sv -o /dev/null -w "%{http_code}" -H 'Expect:' --upload-file "\${FILE}" "\${UPLOAD_URL}")
 
 [[ "\$HTTP_CODE" != "200" ]] && echo "Last call failed : \${HTTP_CODE}" && exit 1
+
+
 
 # Get a presigned URL for a download
 JSON=\$(curl -H "Authorization: \${API_KEY}" -X GET http://s3proxy:8080/api/v1/presigned/url/\${BUCKET}/\${KEY})
@@ -42,7 +45,7 @@ HTTP_CODE=\$(curl -sv -o "\${FILE}-downloaded" -w "%{http_code}" "\${DOWNLOAD_UR
 
 ls -l .
 
-echo "OK, Done"
+echo "Test passed !!"
 EOF
 
 rm -fR /tmp/s3proxy_tester

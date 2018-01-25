@@ -7,22 +7,26 @@ Why use s3proxy ? To centralize credentials and access rights in your applicatio
 
 ## Architecture
 
-s3proxy has been developped as a REST application. It is generating presigned authentified upload and download URL on a object in a bucket.
+s3proxy has been developped as a REST service. It is generating presigned authentified upload and download URL on a object in a bucket.
 This presigned URL has a duration period and can be used by any basic HTTP client in any language.
 
 ## Dependencies
 
-# Build
+## Build
 
-Go [dep](https://github.com/golang/dep)
+* Install [Go](https://golang.org/doc/install)
 
-## Installation
+* Install Go [dep](https://github.com/golang/dep)
 
-Build with `$ go get github.com/mirakl/s3proxy` which will put the binary in `$GOROOT/bin`
+* Check GOPATH env. variable, by default it should be something like $HOME/go
 
-To build linux binaries run : `$ make build-linux-amd64`
+* Go to $GOPATH/src and checkout the project : `git clone git@github.com:mirakl/s3proxy.git`
+
+* run `make build`
 
 To build the docker image : `$ docker build --no-cache -t mirakl/s3proxy .`
+
+(If you want to build a linux binaries from your mac  : `$ make build-linux-amd64`)
 
 
 ## s3proxy Configuration
@@ -55,7 +59,7 @@ The following environment variables can be used in place of the corresponding co
 - `S3PROXY_MINIO_SECRET_KEY`
 
 
-### Minimum configuration
+### Minimum configuration for S3 backend
 
 The minimum configuration for s3proxy is defined by the AWS credentials, to do so define the following env. variables :
 
@@ -63,6 +67,14 @@ The minimum configuration for s3proxy is defined by the AWS credentials, to do s
 * `AWS_ACCESS_KEY` : iam user used access key for S3 (from aws console)
 * `AWS_SECRET_ACCESS_KEY` : iam user used secret for S3 (from aws console)
 
+
+### Minimum configuration for Minio backend
+
+The minimum configuration for minio backend, you can set the following env. variables or command line options :
+
+* `AWS_REGION` : you have to define this variable even if it is not used for minio
+* `S3PROXY_MINIO_ACCESS_KEY (--minio-access-key)` : minio access key (check minio server stdout logs)
+* `S3PROXY_MINIO_SECRET_KEY (--minio-secret-key)` : minio secret key (check minio server stdout logs)
 
 ### Advanced configuration
 
@@ -80,7 +92,6 @@ example :
     --minio-access-key AKIAIOSFODNN7EXAMPLE \
     --minio-secret-key wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY     
 ```
-
 
 ## Logging Format
 
@@ -103,6 +114,31 @@ Parameters:
 
 * bucket : name of the bucket for example : mybucket
 * key : relative path to the object for example : folder1/folder2/file.txt
+
+## curl
+
+* Create a URL for upload :
+
+```
+curl -H "Authorization: ${API_KEY}" -X POST \ 
+    http://localhost:8080/api/v1/presigned/url/my-bucket/folder1/file.txt`
+```
+
+Response : HTTP CODE 200
+
+`{"url" : "http://..."}`
+
+
+* Create a URL for download :
+
+```
+curl -H "Authorization: ${API_KEY}" -X GET \ 
+    http://localhost:8080/api/v1/presigned/url/my-bucket/folder1/file.txt`
+```
+
+Response : HTTP CODE 200
+
+`{"url" : "http://..."}`
 
 
 ## Development / Integration tests
@@ -127,6 +163,6 @@ To stop the environment, run :
 
 ## Tester
 
-tester.sh is shell script which will test the creation of the uplaod and download url.
+s3proxy_tester.sh is shell script which will test the creation of the uplaod and download url.
 It creates s3proxy with all the backends needed, launch the test and destroy the environment.
 It exits with 1 if an error has occured or the webservice send a response code != 200 
