@@ -10,6 +10,11 @@ Why use s3proxy ? To centralize credentials and access rights in your applicatio
 s3proxy has been developped as a REST application. It is generating presigned authentified upload and download URL on a object in a bucket.
 This presigned URL has a duration period and can be used by any basic HTTP client in any language.
 
+## Dependencies
+
+# Build
+
+Go [dep](https://github.com/golang/dep)
 
 ## Installation
 
