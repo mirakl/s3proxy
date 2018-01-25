@@ -15,9 +15,9 @@ This presigned URL has a duration period and can be used by any basic HTTP clien
 
 Build with `$ go get github.com/mirakl/s3proxy` which will put the binary in `$GOROOT/bin`
 
-To build linux binaries run : make build-linux-amd64
+To build linux binaries run : `$ make build-linux-amd64`
 
-To build the docker image : docker build --no-cache -t mirakl/s3proxy .
+To build the docker image : `$ docker build --no-cache -t mirakl/s3proxy .`
 
 
 ## s3proxy Configuration
@@ -54,9 +54,9 @@ The following environment variables can be used in place of the corresponding co
 
 The minimum configuration for s3proxy is defined by the AWS credentials, to do so define the following env. variables :
 
-* AWS_REGION : endpoint used to interact witj S3 (ex: eu-west-1)
-* AWS_ACCESS_KEY : iam user used access key for S3 (from aws console)
-* AWS_SECRET_ACCESS_KEY : iam user used secret for S3 (from aws console)
+* `AWS_REGION` : endpoint used to interact witj S3 (ex: eu-west-1)
+* `AWS_ACCESS_KEY` : iam user used access key for S3 (from aws console)
+* `AWS_SECRET_ACCESS_KEY` : iam user used secret for S3 (from aws console)
 
 
 ### Advanced configuration
@@ -72,7 +72,7 @@ example :
     --api-key 3f300bdc-0028-11e8-ba89-0ed5f89f718b \
     --use-rsyslog rsyslog:514 \
     --use-minio minio:9000 \
-    --minio-access-key AKIAIOSFODNN7EXAMPLE
+    --minio-access-key AKIAIOSFODNN7EXAMPLE \
     --minio-secret-key wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY     
 ```
 
@@ -90,9 +90,9 @@ By default, s3proxy logs requests to stdout the following format :
 
 s3proxy responds directly to the following endpoints.
 
-* / - returns a 200 OK response with the version number (used for health checks)
-* POST /api/v1/presigned/url/:bucket/:key - returns an 200 OK response : create a URL for upload
-* GET /api/v1/presigned/url/:bucket/:key  - return an 200 OK response : create a URL for download
+* `/` - returns a 200 OK response with the version number (used for health checks)
+* `POST /api/v1/presigned/url/:bucket/:key` - returns an 200 OK response : create a URL for upload
+* `GET /api/v1/presigned/url/:bucket/:key`  - return an 200 OK response : create a URL for download
 
 Parameters:
 
@@ -107,10 +107,10 @@ This will start s3proxy with minio and a syslog server
 
 To run docker-compose make sure you first have build a docker image of s3proxy 
 
-`
+```
 make build-linux-amd64
 docker build --no-cache -t mirakl/s3proxy .
-`
+```
 then run
 
 `docker-compose up -d --build`
