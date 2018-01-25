@@ -10,7 +10,7 @@ Why use s3proxy ? To centralize credentials and access rights in your applicatio
 s3proxy has been developped as a REST service. It is generating presigned authentified upload and download URL on a object in a bucket.
 This presigned URL has a duration period and can be used by any basic HTTP client in any language.
 
-## Dependencies
+
 
 ## Build
 
@@ -27,6 +27,8 @@ This presigned URL has a duration period and can be used by any basic HTTP clien
 To build the docker image : `$ docker build --no-cache -t mirakl/s3proxy .`
 
 (If you want to build a linux binaries from your mac  : `$ make build-linux-amd64`)
+
+To ensure dependencies : `make deps`
 
 
 ## s3proxy Configuration
@@ -72,9 +74,11 @@ The minimum configuration for s3proxy is defined by the AWS credentials, to do s
 
 The minimum configuration for minio backend, you can set the following env. variables or command line options :
 
-* `AWS_REGION` : you have to define this variable even if it is not used for minio
-* `S3PROXY_MINIO_ACCESS_KEY (--minio-access-key)` : minio access key (check minio server stdout logs)
-* `S3PROXY_MINIO_SECRET_KEY (--minio-secret-key)` : minio secret key (check minio server stdout logs)
+* `AWS_REGION` : you have to define this variable even if it is not used for minio (ex: eu-west-1)
+* `S3PROXY_USE_MINIO (or --use-minio)` : minion backend url (ex: localhost:9000)
+* `S3PROXY_MINIO_ACCESS_KEY (or --minio-access-key)` : minio access key (check minio server stdout)
+* `S3PROXY_MINIO_SECRET_KEY (or --minio-secret-key)` : minio secret key (check minio server stdout)
+
 
 ### Advanced configuration
 
@@ -93,6 +97,7 @@ example :
     --minio-secret-key wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY     
 ```
 
+
 ## Logging Format
 
 By default, s3proxy logs requests to stdout the following format :
@@ -106,16 +111,21 @@ By default, s3proxy logs requests to stdout the following format :
 
 s3proxy responds directly to the following endpoints.
 
+### Presigned URL API :
+
 * `/` - returns a 200 OK response with the version number (used for health checks)
 * `POST /api/v1/presigned/url/:bucket/:key` - returns an 200 OK response : create a URL for upload
 * `GET /api/v1/presigned/url/:bucket/:key`  - return an 200 OK response : create a URL for download
 
-Parameters:
+### Object API
+* `DELETE /api/v1/object/:bucket/:key`  - return an 200 OK response : delete the object defined by the bucket and the key
+
+### Parameters
 
 * bucket : name of the bucket for example : mybucket
 * key : relative path to the object for example : folder1/folder2/file.txt
 
-## curl
+## curl examples
 
 * Create a URL for upload :
 
@@ -128,6 +138,9 @@ Response : HTTP CODE 200
 
 `{"url" : "http://..."}`
 
+You can use the url in the response to upload file to the backend
+
+`curl -v -H 'Expect:' --upload-file /tmp/file1.txt "${URL}"`
 
 * Create a URL for download :
 
@@ -140,10 +153,34 @@ Response : HTTP CODE 200
 
 `{"url" : "http://..."}`
 
+You can use the url in the response to download file from the backend
+
+`curl -v -o /tmp/file1.txt "${URL}"`
+
+* Delete an object :
+
+```
+curl -H "Authorization: ${API_KEY}" -X DELETE \ 
+    http://localhost:8080/api/v1/object/my-bucket/folder1/file.txt`
+```
+
+Response : HTTP CODE 200
+
+`{"response" : "ok"}`
+
+You can use the url in the response to download file from the backend
+
+`curl -v -o "${FILE}" "${URL}"`
+
+
+* Errors : If an error has occured then a reponse code != 20 is sent with a response body
+
+`{"error" : "<message of the error>"}`
+
 
 ## Development / Integration tests
 
-To setup your development environement or to setup an continous integration job, you can run the docker-compose.
+To setup your development environment or to setup an continous integration job, you can run the docker-compose.
 This will start s3proxy with minio and a syslog server
 
 To run docker-compose make sure you first have build a docker image of s3proxy 

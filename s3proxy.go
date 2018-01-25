@@ -49,6 +49,26 @@ func createPresignedGetObjectURL(bucket string, key string, svc *s3.S3) (string,
 	return req.Presign(presignedUrlduration)
 }
 
+// Delete object in a bucket
+func deleteObject(bucket string, key string, svc *s3.S3) error {
+
+	_, err := svc.DeleteObject(&s3.DeleteObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	err = svc.WaitUntilObjectNotExists(&s3.HeadObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+
+	return err
+}
+
 // create s3 client with aws s3 or minio backend for integration tests running on local machine
 func createS3Client(minio minioConfig) (*s3.S3, error) {
 
@@ -78,7 +98,6 @@ func createS3Client(minio minioConfig) (*s3.S3, error) {
 
 	// Create S3 service client
 	return s3.New(sess), nil
-
 }
 
 type minioConfig struct {
@@ -117,10 +136,10 @@ func GinEngine() *gin.Engine {
 		return
 	})
 
-	v1 := router.Group("/api/v1/presigned/url")
+	presignedURLApiV1 := router.Group("/api/v1/presigned/url")
 
 	// create presigned url for a file upload
-	v1.POST("/:bucket/*key", func(c *gin.Context) {
+	presignedURLApiV1.POST("/:bucket/*key", func(c *gin.Context) {
 
 		bucket := c.Param("bucket")
 		key := c.Param("key")
@@ -138,7 +157,7 @@ func GinEngine() *gin.Engine {
 	})
 
 	// create presigned url for a file download
-	v1.GET("/:bucket/*key", func(c *gin.Context) {
+	presignedURLApiV1.GET("/:bucket/*key", func(c *gin.Context) {
 
 		bucket := c.Param("bucket")
 		key := c.Param("key")
@@ -151,6 +170,26 @@ func GinEngine() *gin.Engine {
 		}
 
 		c.JSON(200, gin.H{"url": url})
+
+		return
+	})
+
+	objectApiV1 := router.Group("/api/v1/object")
+
+	objectApiV1.DELETE("/:bucket/*key", func(c *gin.Context) {
+
+		bucket := c.Param("bucket")
+		key := c.Param("key")
+
+		err := deleteObject(bucket, key, s3Client)
+
+		if err != nil {
+			log.Error("Failed to delete object %s %s", key, bucket, err)
+			c.JSON(500, gin.H{"error": "Failed to delete object " + key})
+			return
+		}
+
+		c.JSON(200, gin.H{"response": "ok"})
 
 		return
 	})
@@ -263,7 +302,7 @@ func main() {
 	log.Info("Shutdown Server ...")
 
 	// wait max 5 seconds before killing
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatal("Server Shutdown : ", err)

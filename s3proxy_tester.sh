@@ -35,7 +35,6 @@ HTTP_CODE=\$(curl -sv -o /dev/null -w "%{http_code}" -H 'Expect:' --upload-file 
 [[ "\$HTTP_CODE" != "200" ]] && echo "Last call failed : \${HTTP_CODE}" && exit 1
 
 
-
 # Get a presigned URL for a download
 JSON=\$(curl -H "Authorization: \${API_KEY}" -X GET http://s3proxy:8080/api/v1/presigned/url/\${BUCKET}/\${KEY})
 DOWNLOAD_URL=\$(echo "\${JSON}" | jq -r '.url')
@@ -43,9 +42,13 @@ HTTP_CODE=\$(curl -sv -o "\${FILE}-downloaded" -w "%{http_code}" "\${DOWNLOAD_UR
 
 [[ "\$HTTP_CODE" != "200" ]] && echo "Last call failed : \${HTTP_CODE}" && exit 1
 
-ls -l .
 
-echo "Test passed !!"
+# Delete a file in a bucket
+HTTP_CODE=\$(curl -sv -o /dev/null -w "%{http_code}" -H "Authorization: \${API_KEY}" -X DELETE http://s3proxy:8080/api/v1/object/\${BUCKET}/\${KEY})
+
+[[ "\$HTTP_CODE" != "200" ]] && echo "Last call failed : \${HTTP_CODE}" && exit 1
+
+echo " !! Test passed !! "
 EOF
 
 rm -fR /tmp/s3proxy_tester
