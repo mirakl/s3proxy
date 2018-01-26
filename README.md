@@ -23,9 +23,9 @@ This presigned URL has a duration period and can be used by any basic HTTP clien
 
 * run `make build`
 
-To build the docker image : `$ docker build --no-cache -t mirakl/s3proxy .`
+To build the docker image : `docker build --no-cache -t mirakl/s3proxy .`
 
-(If you want to build a linux binaries from your mac  : `$ make build-linux-amd64`)
+(If you want to build a linux binaries from your mac  : `make build-linux-amd64`)
 
 To ensure dependencies : `make deps`
 
