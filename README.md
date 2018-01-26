@@ -11,7 +11,6 @@ s3proxy has been developped as a REST service. It is generating presigned authen
 This presigned URL has a duration period and can be used by any basic HTTP client in any language.
 
 
-
 ## Build
 
 * Install [Go](https://golang.org/doc/install)
@@ -111,9 +110,12 @@ By default, s3proxy logs requests to stdout the following format :
 
 s3proxy responds directly to the following endpoints.
 
-### Presigned URL API :
+### Health check :
 
 * `/` - returns a 200 OK response with the version number (used for health checks)
+
+### Presigned URL API :
+
 * `POST /api/v1/presigned/url/:bucket/:key` - returns an 200 OK response : create a URL for upload
 * `GET /api/v1/presigned/url/:bucket/:key`  - return an 200 OK response : create a URL for download
 

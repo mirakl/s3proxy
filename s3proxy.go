@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	Version = "1.0.0"
+	Version              = "1.0.0"
 	log                  = logging.MustGetLogger("s3proxy")
 	format               = logging.MustStringFormatter(`%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x} %{message}`)
 	presignedUrlduration = 15 * time.Minute
@@ -73,6 +73,7 @@ func deleteObject(bucket string, key string, svc *s3.S3) error {
 func createS3Client(minio minioConfig) (*s3.S3, error) {
 
 	var s3Config *aws.Config
+
 	if minio.Host != "" {
 		s3Config = &aws.Config{
 			Credentials:      credentials.NewStaticCredentials(minio.AccessKey, minio.SecretKey, ""),
@@ -302,7 +303,7 @@ func main() {
 	log.Info("Shutdown Server ...")
 
 	// wait max 5 seconds before killing
-	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatal("Server Shutdown : ", err)
