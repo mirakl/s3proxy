@@ -21,14 +21,13 @@ This presigned URL has a duration period and can be used by any basic HTTP clien
 
 * Go to $GOPATH/src and checkout the project : `git clone git@github.com:mirakl/s3proxy.git`
 
-* run `make build`
-
-To build the docker image : `docker build --no-cache -t mirakl/s3proxy .`
-
-(If you want to build a linux binaries from your mac  : `make build-linux-amd64`)
+* run `make`
 
 To ensure dependencies : `make deps`
 
+## Build the docker image
+
+* run `make docker-image`
 
 ## s3proxy Configuration
 
