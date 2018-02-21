@@ -13,9 +13,6 @@ default: build
 build: clean deps vet lint
 	go build -i -v ${LDFLAGS} -o ${BINARY}
 
-install:
-	go install -i -v ${LDFLAGS} -o ${BINARY}
-
 deps:
 	dep ensure
 
@@ -35,6 +32,5 @@ fmt:
 		go fmt $$file ; \
 	done
 
-build-linux-amd64: clean deps vet lint
-	docker run --rm -it -v ${GOPATH}:/go -w /go/src/${PKG} golang:latest go build -i -v ${LDFLAGS} -o s3proxy
-
+docker-image:
+	docker build . -t mirakl/s3proxy
