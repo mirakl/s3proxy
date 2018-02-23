@@ -1,18 +1,24 @@
 FROM golang:1.9.4-stretch as builder
 
+ARG VERSION
+
 RUN go get -u github.com/golang/dep/cmd/dep
+RUN go get -u gopkg.in/alecthomas/gometalinter.v2
+RUN gometalinter.v2 --install
 
 ENV SRC_DIR /go/src/s3proxy
 WORKDIR $SRC_DIR
 
-COPY Gopkg.* ./
-COPY vendor/ ./vendor
+COPY backend/ ./backend
+COPY logger/ ./logger
 COPY middleware/ ./middleware
-COPY logging/ ./logging
+COPY router/ ./router
+COPY s3proxytest/ ./s3proxytest
+COPY util/ ./util
 COPY Makefile ./
 COPY *.go ./
 
-RUN make
+RUN make VERSION=${VERSION}
 
 FROM centos:latest
 

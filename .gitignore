@@ -2,4 +2,8 @@
 .idea
 s3proxy
 *.iml
-test
+.minio
+.s3proxy
+vendor
+_vendor*
+Gopkg.*

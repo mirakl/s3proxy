@@ -1,19 +1,21 @@
 package middleware
 
 import (
-	"time"
 	"github.com/gin-gonic/gin"
 	"github.com/op/go-logging"
+	"s3proxy/util"
+	"time"
 )
 
-func Logger(log *logging.Logger, notlogged ...string) gin.HandlerFunc {
-	return LoggerWithWriter(log, notlogged...)
+// Create a Logger middleware for gin
+func NewLogger(log *logging.Logger, notlogged ...string) gin.HandlerFunc {
+	return newLoggerWithWriter(log, notlogged...)
 }
 
 // Logger middleware that will write the access logs
-func LoggerWithWriter(log *logging.Logger, notlogged ...string) gin.HandlerFunc {
+func newLoggerWithWriter(log *logging.Logger, notlogged ...string) gin.HandlerFunc {
 
-	skip := array2map(notlogged...)
+	skip := util.Array2map(notlogged...)
 
 	return func(c *gin.Context) {
 		// Start timer
@@ -34,7 +36,6 @@ func LoggerWithWriter(log *logging.Logger, notlogged ...string) gin.HandlerFunc 
 			statusCode := c.Writer.Status()
 			comment := c.Errors.ByType(gin.ErrorTypeAny).String()
 
-
 			log.Info("%v | %3d | %13v | %15s | %s %s\n%s",
 				end.Format("2006/01/02 - 15:04:05"),
 				statusCode,
@@ -47,4 +48,3 @@ func LoggerWithWriter(log *logging.Logger, notlogged ...string) gin.HandlerFunc 
 		}
 	}
 }
-
