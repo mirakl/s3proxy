@@ -10,24 +10,39 @@ Why use s3proxy ? To centralize credentials and access rights in your applicatio
 s3proxy has been developped as a REST service. It is generating presigned authentified upload and download URL on a object in a bucket.
 This presigned URL has a duration period and can be used by any basic HTTP client in any language.
 
+## Requirements 
+
+* Docker version 17.12.0+
+* Go 1.9.2++
+
 
 ## Build
 
 * Install [Go](https://golang.org/doc/install)
 
-* Install Go [dep](https://github.com/golang/dep)
+* Set $GOPATH variable, by default it should be something like $HOME/go
 
-* Check GOPATH env. variable, by default it should be something like $HOME/go
+* Set $GOBIN variable, by default it should be something like $GOPATH/bin
+
+* Make sure $GOBIN is in your $PATH : `export $PATH=$PATH:$GOBIN`
 
 * Go to $GOPATH/src and checkout the project : `git clone git@github.com:mirakl/s3proxy.git`
+
+* Install dep : `go get -u github.com/golang/dep/cmd/dep`
+
+* Install gomegalinter (for lint checks) : `go get -u gopkg.in/alecthomas/gometalinter.v2`
+
+* Install linters : `gometalinter.v2 --install`
 
 * run `make`
 
 To ensure dependencies : `make deps`
 
+
 ## Build the docker image
 
 * run `make docker-image`
+
 
 ## s3proxy Configuration
 
@@ -174,33 +189,58 @@ You can use the url in the response to download file from the backend
 `curl -v -o "${FILE}" "${URL}"`
 
 
-* Errors : If an error has occured then a reponse code != 20 is sent with a response body
+* Errors : If an error has occured then a reponse code != 200 is sent with a response body
 
 `{"error" : "<message of the error>"}`
 
+If the object does not exists, it returns always 200.
 
-## Development / Integration tests
+## Development
 
-To setup your development environment or to setup an continous integration job, you can run the docker-compose.
-This will start s3proxy with minio and a syslog server
+To setup your development environment you can run the docker-compose.
+This will start minio and a syslog server
 
-To run docker-compose make sure you first have build a docker image of s3proxy 
+To run :  
 
-```
-make build-linux-amd64
-docker build --no-cache -t mirakl/s3proxy .
-```
-then run
+`docker-compose -f ./test/docker-compose.yml up -d minio rsyslog createbuckets`
 
-`docker-compose up -d --build`
-
-To stop the environment, run : 
+To stop : 
 
 `docker-compose down`
 
 
-## Tester
+## Tests
 
-s3proxy_tester.sh is shell script which will test the creation of the uplaod and download url.
-It creates s3proxy with all the backends needed, launch the test and destroy the environment.
-It exits with 1 if an error has occured or the webservice send a response code != 200 
+Several kind of tests are available :
+
+* Unit tests
+
+* Integration tests
+
+* End-to-end tests
+
+
+### Unit tests
+
+Unit tests are used to verify the wanted behaviour of the s3proxy.
+They don't need any external components, they us a fake S3 backend for running tests. 
+
+To run the unit tests : `make test`
+
+
+### Integration tests
+
+Integration tests are used to verify the integration with a real s3 backend and a rsyslog server. 
+In our tests we are using minio server which provides a S3 compatible API.
+
+To run the tests : `make integration-test`
+
+
+### End-to-end tests
+
+End-to-end tests are used to verify the whole integration with a s3proxy running standalone in its container, a S3 backend (minio) and a rsyslog.
+The integration tests simulate external call from a program using the s3proxy. 
+
+To run the tests : `make end2end-test VERSION=1.0.0`
+
+where `VERSION` is the container version of the s3proxy (make sure to build the image first)

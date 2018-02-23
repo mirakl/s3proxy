@@ -1,17 +1,19 @@
 package middleware
 
 import (
-	"net/http/httputil"
 	"github.com/gin-gonic/gin"
 	"github.com/op/go-logging"
+	"net/http"
+	"net/http/httputil"
 )
 
-func Recovery(log *logging.Logger) gin.HandlerFunc {
-	return RecoveryWithLogger(log)
+// Creates a Recovery middlware, in case of a fatal error returns 500
+func NewRecovery(log *logging.Logger) gin.HandlerFunc {
+	return newRecoveryWithLogger(log)
 }
 
 // Recovery returns a middleware that recovers from any panics and writes a 500 if there was one.
-func RecoveryWithLogger(log *logging.Logger) gin.HandlerFunc {
+func newRecoveryWithLogger(log *logging.Logger) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		defer func() {
@@ -20,7 +22,7 @@ func RecoveryWithLogger(log *logging.Logger) gin.HandlerFunc {
 					httprequest, _ := httputil.DumpRequest(c.Request, false)
 					log.Info("[Recovery] panic recovered:%s %s", string(httprequest), err)
 				}
-				c.AbortWithStatus(500)
+				c.AbortWithStatus(http.StatusInternalServerError)
 			}
 		}()
 		c.Next()
