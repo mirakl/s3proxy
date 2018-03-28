@@ -1,8 +1,8 @@
-package middleware
+package util
 
 // creates a map with entries whose keys are array elements and value empty struct
 // key=array[index] value=<empty_struct>
-func array2map(arr ...string) map[string]struct{} {
+func Array2map(arr ...string) map[string]struct{} {
 
 	var result map[string]struct{}
 

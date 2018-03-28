@@ -1,22 +1,23 @@
-package logging
+package logger
 
 import (
-	"log/syslog"
 	"github.com/op/go-logging"
+	"log/syslog"
 )
 
+// RSyslog backend for logging
 type RSyslogBackend struct {
 	Writer *syslog.Writer
 }
 
-// syslog priority like syslog.LOG_LOCAL3|syslog.LOG_DEBUG etc.
-func NewRSyslogBackendPriority(prefix string, host string, priority syslog.Priority, tag string) (b *RSyslogBackend, err error) {
+// Create a new RSyslog backend
+func NewRSyslogBackend(prefix string, host string, priority syslog.Priority, tag string) (b *RSyslogBackend, err error) {
 	var w *syslog.Writer
 	w, err = syslog.Dial("udp", host, priority, tag)
 	return &RSyslogBackend{w}, err
 }
 
-// implements the Backend interface.
+// implements the Backend interface method
 func (b *RSyslogBackend) Log(level logging.Level, calldepth int, rec *logging.Record) error {
 	line := rec.Formatted(calldepth + 1)
 	switch level {

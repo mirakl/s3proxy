@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
+	"s3proxy/util"
 )
 
 func respondWithError(code int, message string, c *gin.Context) {
@@ -9,10 +10,10 @@ func respondWithError(code int, message string, c *gin.Context) {
 	c.Abort()
 }
 
-// Manage api authorization key based on header token 'Authorization'
-func Authorization(serverToken string, notsecured ...string) gin.HandlerFunc {
+// Creates authorization middleware for API auhtorization
+func NewAuthorization(serverToken string, notsecured ...string) gin.HandlerFunc {
 
-	skip := array2map(notsecured...)
+	skip := util.Array2map(notsecured...)
 
 	return func(c *gin.Context) {
 
@@ -21,11 +22,6 @@ func Authorization(serverToken string, notsecured ...string) gin.HandlerFunc {
 		// check if server token is defined and path is secured
 		if _, shouldSkip := skip[path]; serverToken != "" && !shouldSkip {
 			accessToken := c.Request.Header.Get("Authorization")
-
-			if accessToken == "" {
-				respondWithError(401, "API token required", c)
-				return
-			}
 
 			if accessToken != serverToken {
 				respondWithError(401, "Invalid API token", c)

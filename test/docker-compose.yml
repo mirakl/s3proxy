@@ -1,13 +1,13 @@
-version: "2"
+version: "3.5"
 
 services:
 
   s3proxy:
-    image: mirakl/s3proxy
-    ports:
-      - "8080:8080"
+    image: mirakl/s3proxy:${VERSION}
+    networks:
+      - s3proxy-network
     depends_on:
-      - minio
+      - createbuckets
       - rsyslog
     environment:
       - "AWS_REGION=eu-west-1"
@@ -20,14 +20,13 @@ services:
 
   rsyslog:
     image: voxxit/rsyslog
+    networks:
+      - s3proxy-network
 
   minio:
     image: minio/minio
-    ports:
-      - "9000:9000"
-    volumes:
-      - ./test/.minio/data:/export
-      - ./test/.minio/config:/root/.minio
+    networks:
+      - s3proxy-network
     environment:
       - "MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE"
       - "MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
@@ -35,13 +34,21 @@ services:
 
   createbuckets:
     image: minio/mc
+    networks:
+      - s3proxy-network
     depends_on:
       - minio
     entrypoint: >
       /bin/sh -c "
+      /bin/sleep 5;
       /usr/bin/mc config host add myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY;
       /usr/bin/mc rm -r --force myminio/s3proxy-bucket;
       /usr/bin/mc mb myminio/s3proxy-bucket;
       /usr/bin/mc policy download myminio/s3proxy-bucket;
       exit 0;
       "
+
+networks:
+  s3proxy-network:
+    name: s3proxy-network
+    driver: bridge
