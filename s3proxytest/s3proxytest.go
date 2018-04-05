@@ -3,11 +3,17 @@ package s3proxytest
 import (
 	"bufio"
 	"bytes"
+	"crypto/rand"
 	"crypto/sha256"
 	jsonlib "encoding/json"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/gin-gonic/gin"
 	"github.com/go-errors/errors"
+	"github.com/mirakl/s3proxy/backend"
 	"github.com/op/go-logging"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,16 +21,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
-	"s3proxy/backend"
+	"sync"
 	"testing"
 	"time"
-	"crypto/rand"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"sync"
 )
 
 var (
@@ -63,7 +64,7 @@ func WaitForRessources(t *testing.T, s3proxyHost string) {
 	}()
 
 	go func() {
-		for i:= range messages {
+		for i := range messages {
 			log.Debug("Available ressource : %v", i)
 		}
 	}()
@@ -152,6 +153,25 @@ func ServeDeleteObject(t *testing.T, r *gin.Engine, bucket string, key string, a
 	return ServeHTTP(t, r, http.MethodDelete, fmt.Sprintf("/api/v1/object/%v%v", bucket, key), authorization)
 }
 
+func ServeCopyObject(t *testing.T, r *gin.Engine, sourceBucket string, sourceKey string, destinationBucket string, destinationKey string, authorization string) *httptest.ResponseRecorder {
+	params := make(url.Values)
+
+	if destinationBucket != "" {
+		params.Set("destBucket", destinationBucket)
+	}
+	if destinationKey != "" {
+		params.Set("destKey", destinationKey)
+	}
+
+	queryParams := ""
+
+	if len(params) > 0 {
+		queryParams = "?" + params.Encode()
+	}
+
+	return ServeHTTP(t, r, http.MethodPost, fmt.Sprintf("/api/v1/object/copy/%v%v%v", sourceBucket, sourceKey, queryParams), authorization)
+}
+
 func CatchPanic() {
 	// if panic, recover first
 	err := recover()
@@ -210,8 +230,6 @@ func createTempFileInMB(t *testing.T, size int) (*os.File, int64) {
 		assert.Nil(t, err)
 
 		stat, err := file.Stat()
-		fmt.Println(stat.Name())
-		fmt.Println(stat.Size())
 		assert.Nil(t, err)
 
 		return file, stat.Size()
@@ -229,7 +247,9 @@ func getFieldFromJson(t *testing.T, json []byte, field string) string {
 		err := jsonlib.Unmarshal(json, &objmap)
 		assert.Nil(t, err)
 
-		return objmap[field].(string)
+		if val, ok := objmap[field]; ok {
+			return val.(string)
+		}
 	}
 
 	return ""
@@ -315,11 +335,11 @@ func getPresignedUrl(t *testing.T, method string, host string, key string, apiKe
 // url : full presigned url
 // apiKey : authorization key
 // returns an http status code like 200, the uploaded file created and if any an error
-func uploadFile(t *testing.T, url string, apiKey string) (statusCode int, uploadedFile *os.File) {
+func uploadFile(t *testing.T, url string, apiKey string) (int, *os.File) {
 
 	uploadedFile, size := createTempFileInMB(t, 10) // 10MB
 
-	statusCode, _ = httpCall(t, http.MethodPut, url, "binary/octet-stream", apiKey, size, uploadedFile)
+	statusCode, _ := httpCall(t, http.MethodPut, url, "binary/octet-stream", apiKey, size, uploadedFile)
 
 	return statusCode, uploadedFile
 }
@@ -353,6 +373,33 @@ func deleteFile(t *testing.T, host string, key string, apiKey string) int {
 	return statusCode
 }
 
+// Copy file
+func copyFile(t *testing.T, host string, sourceBucket string, sourceKey string, destinationBucket string, destinationKey string, apiKey string) (int, string) {
+
+	params := make(url.Values)
+
+	if destinationBucket != "" {
+		params.Set("destBucket", destinationBucket)
+	}
+	if destinationKey != "" {
+		params.Set("destKey", destinationKey)
+	}
+
+	queryParams := ""
+
+	if len(params) > 0 {
+		queryParams = "?" + params.Encode()
+	}
+
+	endpoint := fmt.Sprintf("http://%v/api/v1/object/copy/%v%v%v", host, sourceBucket, sourceKey, queryParams)
+
+	statusCode, body := httpCall(t, http.MethodPost, endpoint, "", apiKey, -1, nil)
+
+	msg := getFieldFromJson(t, body, "error")
+
+	return statusCode, msg
+}
+
 // Wrapper for presigned URL
 func getPresignedUrlForUpload(t *testing.T, host string, key string, apiKey string) (int, string) {
 	return getPresignedUrl(t, http.MethodPost, host, key, apiKey)
@@ -363,21 +410,10 @@ func getPresignedUrlForDownload(t *testing.T, host string, key string, apiKey st
 	return getPresignedUrl(t, http.MethodGet, host, key, apiKey)
 }
 
-// Used for integration and end-to-end test with the following scenario :
-// 1- Get a presigned url for upload
-// 1- Upload the file
-// 2- Get a presgined url for download
-// 2- Download the file uploaded in the step before
-// 3- Check if the files are identical (checksum MD5)
-// 4- Delete the file
-// 5- Try to download the file again => should get 404
-func RunSimpleScenarioForS3proxy(t *testing.T, s3proxyHost string) {
-
-	key := "s3proxy-bucket/dummyfolder/dummyfile"
-
-	// UPLOAD a temporary file to the s3 backend
+// checkUpload checks upload scenario : get presigned url + upload a file
+func checkUpload(t *testing.T, s3proxyHost string, fullKey string) *os.File {
 	// create presigned url for uploading the file
-	statusCode, uploadUrl := getPresignedUrlForUpload(t, s3proxyHost, key, ServerAPIKey)
+	statusCode, uploadUrl := getPresignedUrlForUpload(t, s3proxyHost, fullKey, ServerAPIKey)
 
 	// should return 200
 	require.Equal(t, http.StatusOK, statusCode)
@@ -391,9 +427,13 @@ func RunSimpleScenarioForS3proxy(t *testing.T, s3proxyHost string) {
 	// should return 200
 	require.Equal(t, http.StatusOK, statusCode)
 
-	// DOWNLOAD the file previously uploaded
+	return uploadedFile
+}
+
+// checkDownload checks download scenario : get presigned url + download the file
+func checkDownload(t *testing.T, s3proxyHost string, fullKey string, statusCodeToCheck int) *os.File {
 	// create presigned url for downloading the file
-	statusCode, downloadUrl := getPresignedUrlForDownload(t, s3proxyHost, key, ServerAPIKey)
+	statusCode, downloadUrl := getPresignedUrlForDownload(t, s3proxyHost, fullKey, ServerAPIKey)
 
 	// should return 200
 	require.Equal(t, http.StatusOK, statusCode)
@@ -405,19 +445,72 @@ func RunSimpleScenarioForS3proxy(t *testing.T, s3proxyHost string) {
 	//defer os.Remove(downloadedFile.Name())
 
 	// should return 200
+	require.Equal(t, statusCodeToCheck, statusCode)
+
+	return downloadedFile
+}
+
+// checkDownload checks copy scenario
+func checkCopy(t *testing.T, s3proxyHost string, sourceBucket string, sourceKey string, destBucket string, destKey string) {
+	// copy the file
+	statusCode, message := copyFile(t, s3proxyHost, sourceBucket, sourceKey, destBucket, destKey, ServerAPIKey)
+
+	// should return 200
 	require.Equal(t, http.StatusOK, statusCode)
+
+	// should be empty, no error
+	require.Empty(t, message)
+
+	sourceFile := checkUpload(t, s3proxyHost, sourceBucket+sourceKey)
+	defer os.Remove(sourceFile.Name())
+
+	destinationFile := checkDownload(t, s3proxyHost, destBucket+destKey, http.StatusOK)
+	defer os.Remove(destinationFile.Name())
+
+	// Verify the files are the same
+	require.True(t, verifyFileCheckSumEquality(t, sourceFile, destinationFile))
+}
+
+// checkDownload checks delete scenario : delete the file + try to download again
+func checkDelete(t *testing.T, s3proxyHost string, fullKey string) {
+	// Delete the file should return 200
+	require.Equal(t, http.StatusOK, deleteFile(t, s3proxyHost, fullKey, ServerAPIKey))
+
+	// Last check, try to download again the file
+	// should return 404 because the file has been deleted
+	checkDownload(t, s3proxyHost, fullKey, http.StatusNotFound)
+}
+
+// Used for integration and end-to-end test with the following scenario :
+// 1- Get a presigned url for upload
+// 1- Upload the file
+// 2- Get a presgined url for download
+// 2- Download the file uploaded in the step before
+// 3- Check if the files are identical (checksum MD5)
+// 4- Delete the file
+// 5- Try to download the file again => should get 404
+func RunSimpleScenarioForS3proxy(t *testing.T, s3proxyHost string) {
+	bucket := "s3proxy-bucket"
+	key := "/dummyfolder/dummyfile"
+	fullKey := bucket + key
+
+	// UPLOAD a temporary file to the s3 backend
+	uploadedFile := checkUpload(t, s3proxyHost, fullKey)
+	defer os.Remove(uploadedFile.Name())
+
+	// DOWNLOAD the file previously uploaded
+	downloadedFile := checkDownload(t, s3proxyHost, fullKey, http.StatusOK)
+	defer os.Remove(downloadedFile.Name())
 
 	// Verify the files are the same
 	require.True(t, verifyFileCheckSumEquality(t, uploadedFile, downloadedFile))
 
-	// DELETE PART
-	// Delete the file should return 200
-	require.Equal(t, http.StatusOK, deleteFile(t, s3proxyHost, key, ServerAPIKey))
+	// COPY objects
+	checkCopy(t, s3proxyHost, bucket, key, bucket, key+"2")
 
-	// Last check, try to download again the file
-	statusCode, redownloadedFile := downloadFile(t, downloadUrl, ServerAPIKey)
-	defer os.Remove(redownloadedFile.Name())
+	copiedFile := checkDownload(t, s3proxyHost, fullKey+"2", http.StatusOK)
+	defer os.Remove(copiedFile.Name())
 
-	// should return 404 because the file has been deleted
-	require.Equal(t, http.StatusNotFound, statusCode)
+	// DELETE object
+	checkDelete(t, s3proxyHost, fullKey+"2")
 }

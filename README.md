@@ -44,6 +44,11 @@ To ensure dependencies : `make deps`
 * run `make docker-image`
 
 
+## Push the docker image
+
+* run `make docker-image-push`
+
+
 ## s3proxy Configuration
 
 You can use environnement variables or command line options for configuration.
@@ -126,20 +131,33 @@ s3proxy responds directly to the following endpoints.
 
 ### Health check :
 
-* `/` - returns a 200 OK response with the version number (used for health checks)
+* `/` 
+    - returns a 200 OK response with the version number (used for health checks)
 
 ### Presigned URL API :
 
-* `POST /api/v1/presigned/url/:bucket/:key` - returns an 200 OK response : create a URL for upload
-* `GET /api/v1/presigned/url/:bucket/:key`  - return an 200 OK response : create a URL for download
+* Create URL for upload : `POST /api/v1/presigned/url/:bucket/:key`    
+   - returns an 200 OK : create a URL for upload
+    
+* Create URL for download : `GET /api/v1/presigned/url/:bucket/:key`  
+    - return an 200 OK : create a URL for download
 
 ### Object API
-* `DELETE /api/v1/object/:bucket/:key`  - return an 200 OK response : delete the object defined by the bucket and the key
+
+* Delete object : `DELETE /api/v1/object/:bucket/:key`  
+    - return an 200 OK response : delete the object defined by the bucket and the key
+    
+* Copy object : `POST /api/v1/object/copy/:bucket/:key?destBucket=...&destKey=...`
+    - return an 200 OK : copy the object defined by the bucket and the key to the destBucket and destKey
+    - return 400 Bad request if destBucket or destKey are missing
+    - return 404 Not Found if the bucket or the key are not found (also destBucket)
 
 ### Parameters
 
 * bucket : name of the bucket for example : mybucket
 * key : relative path to the object for example : folder1/folder2/file.txt
+* destBucket : destination bucket for example : mybucket
+* destKey : destination key for example : /folder/file2.txt 
 
 ## curl examples
 
@@ -184,9 +202,16 @@ Response : HTTP CODE 200
 
 `{"response" : "ok"}`
 
-You can use the url in the response to download file from the backend
+* Copy an object :
 
-`curl -v -o "${FILE}" "${URL}"`
+```
+curl -H "Authorization: ${API_KEY}" -X POST \ 
+    http://localhost:8080/api/v1/object/copy/my-bucket/folder1/file.txt?destBucket=my-bucket&destKey=/folder1/file2.txt`
+```
+
+Response : HTTP CODE 200
+
+`{"response" : "ok"}`
 
 
 * Errors : If an error has occured then a reponse code != 200 is sent with a response body

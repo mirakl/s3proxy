@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"s3proxy/util"
+	"github.com/mirakl/s3proxy/util"
 )
 
 func respondWithError(code int, message string, c *gin.Context) {
