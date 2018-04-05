@@ -2,6 +2,7 @@ NAME = s3proxy
 REMOTE_NAME = ${REGISTRY}/${NAME}
 
 GOPATH ?= ${HOME}/go
+VERSION ?= 1.1.0
 
 LDFLAGS=-ldflags "-X main.version=${VERSION}"
 
@@ -27,12 +28,12 @@ test:
 
 integration-test:
 	docker-compose -f ./test/docker-compose.yml up -d minio rsyslog createbuckets
-	docker run --rm --net=s3proxy-network -v ${GOPATH}:/go -i golang go test -v s3proxy/test/... -tags=integration
+	docker run --rm --net=s3proxy-network -v ${GOPATH}:/go -i golang go test -v github.com/mirakl/s3proxy/test/... -tags=integration
 	docker-compose -f ./test/docker-compose.yml down
 
 end2end-test: docker-image
 	VERSION=${VERSION} docker-compose -f ./test/docker-compose.yml up -d
-	docker run --rm --net=s3proxy-network -v ${GOPATH}:/go -i golang go test -v s3proxy/test/... -tags=end2end
+	docker run --rm --net=s3proxy-network -v ${GOPATH}:/go -i golang go test -v github.com/mirakl/s3proxy/test/... -tags=end2end
 	VERSION=${VERSION} docker-compose -f ./test/docker-compose.yml down
 
 docker-image: check-version

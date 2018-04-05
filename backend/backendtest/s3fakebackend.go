@@ -2,7 +2,9 @@
 package backendtest
 
 import (
-	"s3proxy/backend"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/mirakl/s3proxy/backend"
 	"strings"
 	"time"
 )
@@ -39,19 +41,30 @@ type S3FakeBackend struct {
 }
 
 // Create presigned url for upload just like for a real s3 backend
-func (b *S3FakeBackend) CreatePresignedURLForUpload(bucket string, key string, expire time.Duration) (string, error) {
-	return b.s3Backend.CreatePresignedURLForUpload(bucket, key, expire)
+func (b *S3FakeBackend) CreatePresignedURLForUpload(object backend.BucketObject, expire time.Duration) (string, error) {
+	return b.s3Backend.CreatePresignedURLForUpload(object, expire)
 }
 
 // Create presigned url for download just like for a real s3 backend
-func (b *S3FakeBackend) CreatePresignedURLForDownload(bucket string, key string, expire time.Duration) (string, error) {
-	return b.s3Backend.CreatePresignedURLForDownload(bucket, key, expire)
+func (b *S3FakeBackend) CreatePresignedURLForDownload(object backend.BucketObject, expire time.Duration) (string, error) {
+	return b.s3Backend.CreatePresignedURLForDownload(object, expire)
 }
 
 // Delete action for an object in a bucket, in our case does nothing because no real backend
-func (b *S3FakeBackend) DeleteObject(bucket string, key string) error {
-	if strings.Contains(key, "error") {
+func (b *S3FakeBackend) DeleteObject(object backend.BucketObject) error {
+	if strings.Contains(object.Key, "error") {
 		panic("Fake panic :))")
+	}
+	return nil
+}
+
+// Fake copy, does nothing except returning some errors when the keyword "notfound" are used
+func (b *S3FakeBackend) CopyObject(sourceObject backend.BucketObject, destinationObject backend.BucketObject) error {
+	if strings.Contains(sourceObject.BucketName, "notfound") || strings.Contains(destinationObject.BucketName, "notfound") {
+		return awserr.New(s3.ErrCodeNoSuchBucket, "No such bucket", nil)
+	}
+	if strings.Contains(sourceObject.Key, "notfound") {
+		return awserr.New(s3.ErrCodeNoSuchKey, "No such key", nil)
 	}
 	return nil
 }

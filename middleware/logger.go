@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/mirakl/s3proxy/util"
 	"github.com/op/go-logging"
-	"s3proxy/util"
 	"time"
 )
 

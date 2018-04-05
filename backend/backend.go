@@ -1,15 +1,37 @@
 package backend
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
-// Interface for s3 backend
+// Backend provides an interface for S3
 type Backend interface {
-	// Create presigned URL for uploading file to the bucket
-	CreatePresignedURLForUpload(bucket string, key string, expire time.Duration) (string, error)
+	// CreatePresignedURLForUpload creates a presigned URL for uploading file to the bucket
+	CreatePresignedURLForUpload(object BucketObject, expire time.Duration) (string, error)
 
-	// Create presigned URL for downloading file from the bucket
-	CreatePresignedURLForDownload(bucket string, key string, expire time.Duration) (string, error)
+	// CreatePresignedURLForDownload creates a presigned URL for downloading file from the bucket
+	CreatePresignedURLForDownload(object BucketObject, expire time.Duration) (string, error)
 
-	// Delete object in a bucket
-	DeleteObject(bucket string, key string) error
+	// DeleteObject delete an object in a bucket
+	DeleteObject(object BucketObject) error
+
+	// CopyObject copies one item from a bucket to another
+	// sourceObject : source object (ex: mybucket and /folder/item)
+	// destinationObject : destination object (ex: mybucket and /folder/item2)
+	CopyObject(sourceObject BucketObject, destinationObject BucketObject) error
+}
+
+// BucketObject is a tuple containing an object key (ex: /folder/item) and a bucket name (ex: mybucket)
+type BucketObject struct {
+	BucketName string
+	Key        string
+}
+
+func (b BucketObject) String() string {
+	return fmt.Sprintf("%s (%s)", b.BucketName, b.Key)
+}
+
+func (b BucketObject) FullPath() string {
+	return fmt.Sprintf("/%s%s", b.BucketName, b.Key)
 }

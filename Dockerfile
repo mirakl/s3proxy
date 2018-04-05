@@ -6,7 +6,7 @@ RUN go get -u github.com/golang/dep/cmd/dep
 RUN go get -u gopkg.in/alecthomas/gometalinter.v2
 RUN gometalinter.v2 --install
 
-ENV SRC_DIR /go/src/s3proxy
+ENV SRC_DIR /go/src/github.com/mirakl/s3proxy
 WORKDIR $SRC_DIR
 
 COPY backend/ ./backend
@@ -22,7 +22,7 @@ RUN make VERSION=${VERSION}
 
 FROM centos:latest
 
-COPY --from=builder /go/src/s3proxy/s3proxy /bin
+COPY --from=builder /go/src/github.com/mirakl/s3proxy /bin
 RUN chmod +x /bin/s3proxy
 
 EXPOSE 8080
