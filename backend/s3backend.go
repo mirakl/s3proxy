@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"time"
 )
 
@@ -112,6 +113,28 @@ func (b *S3Backend) DeleteObject(object BucketObject) error {
 	})
 	*/
 	return nil
+}
+
+// BatchDeleteObjects deletes a list of objects in batch mode
+func (b *S3Backend) BatchDeleteObjects(objects []BucketObject) error {
+	batcher := s3manager.NewBatchDeleteWithClient(b.client)
+
+	objectsToDelete := make([]s3manager.BatchDeleteObject, len(objects))
+
+	for index, element := range objects {
+		objectsToDelete[index] = s3manager.BatchDeleteObject{
+			Object: &s3.DeleteObjectInput{
+				Key:    aws.String(element.Key),
+				Bucket: aws.String(element.BucketName),
+			},
+		}
+	}
+
+	err := batcher.Delete(aws.BackgroundContext(), &s3manager.DeleteObjectsIterator{
+		Objects: objectsToDelete,
+	})
+
+	return err
 }
 
 // Copy item from source to destination bucket

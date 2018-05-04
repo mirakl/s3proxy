@@ -3,7 +3,7 @@ REGISTRY = eu.gcr.io/mirakl-production/kube/mp
 REMOTE_NAME = ${REGISTRY}/${NAME}
 
 GOPATH ?= ${HOME}/go
-VERSION ?= 1.1.0
+VERSION ?= 1.2.0
 
 LDFLAGS=-ldflags "-X main.version=${VERSION}"
 
@@ -38,10 +38,11 @@ end2end-test: docker-image
 	VERSION=${VERSION} docker-compose -f ./test/docker-compose.yml down
 
 docker-image: check-version
-	docker build . -t mirakl/${NAME}:${VERSION} -t ${REMOTE_NAME}:${VERSION} --build-arg VERSION=${VERSION}
+	docker build . -t mirakl/${NAME}:${VERSION} -t ${REMOTE_NAME}:${VERSION} -t ${REMOTE_NAME}:latest --build-arg VERSION=${VERSION}
 
 docker-image-push: docker-image
 	docker push ${REMOTE_NAME}:${VERSION}
+	docker push ${REMOTE_NAME}:latest
 
 check-version:
 ifndef VERSION

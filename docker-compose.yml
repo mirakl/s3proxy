@@ -1,0 +1,40 @@
+version: "3.5"
+
+services:
+
+  s3proxy:
+    image: eu.gcr.io/mirakl-production/kube/mp/s3proxy:latest
+    depends_on:
+      - createbuckets
+    ports:
+      - 9080:9080
+    environment:
+      - "AWS_REGION=eu-west-1"
+      - "S3PROXY_HTTP_PORT=9080"
+      - "S3PROXY_USE_MINIO=localhost:9000"
+      - "S3PROXY_MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE"
+      - "S3PROXY_MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+    command: s3proxy
+
+  minio:
+    image: minio/minio
+    ports:
+      - 9000:9000
+    environment:
+      - "MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE"
+      - "MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+    command: server /export
+
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      /bin/sleep 5;
+      /usr/bin/mc config host add myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY;
+      /usr/bin/mc rm -r --force myminio/test;
+      /usr/bin/mc mb myminio/test;
+      /usr/bin/mc policy download myminio/test;
+      exit 0;
+      "

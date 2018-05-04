@@ -58,6 +58,10 @@ func (b *S3FakeBackend) DeleteObject(object backend.BucketObject) error {
 	return nil
 }
 
+func (b *S3FakeBackend) BatchDeleteObjects(objects []backend.BucketObject) error {
+	return nil
+}
+
 // Fake copy, does nothing except returning some errors when the keyword "notfound" are used
 func (b *S3FakeBackend) CopyObject(sourceObject backend.BucketObject, destinationObject backend.BucketObject) error {
 	if strings.Contains(sourceObject.BucketName, "notfound") || strings.Contains(destinationObject.BucketName, "notfound") {
