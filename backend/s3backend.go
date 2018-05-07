@@ -75,31 +75,31 @@ func newS3Backend(config []S3BackendConfig) (*S3Backend, error) {
 }
 
 // Create a presigned url for an upload of an object
-func (b *S3Backend) CreatePresignedURLForUpload(bucket string, key string, expire time.Duration) (string, error) {
+func (b *S3Backend) CreatePresignedURLForUpload(object BucketObject, expire time.Duration) (string, error) {
 	req, _ := b.client.PutObjectRequest(&s3.PutObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
+		Bucket: aws.String(object.BucketName),
+		Key:    aws.String(object.Key),
 	})
 
 	return req.Presign(expire)
 }
 
 // Create a presigned url for a download of an object
-func (b *S3Backend) CreatePresignedURLForDownload(bucket string, key string, expire time.Duration) (string, error) {
+func (b *S3Backend) CreatePresignedURLForDownload(object BucketObject, expire time.Duration) (string, error) {
 	req, _ := b.client.GetObjectRequest(&s3.GetObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
+		Bucket: aws.String(object.BucketName),
+		Key:    aws.String(object.Key),
 	})
 
 	return req.Presign(expire)
 }
 
 // Delete action for an object in a bucket
-func (b *S3Backend) DeleteObject(bucket string, key string) error {
+func (b *S3Backend) DeleteObject(object BucketObject) error {
 
 	_, err := b.client.DeleteObject(&s3.DeleteObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
+		Bucket: aws.String(object.BucketName),
+		Key:    aws.String(object.Key),
 	})
 
 	if err != nil {
@@ -112,4 +112,16 @@ func (b *S3Backend) DeleteObject(bucket string, key string) error {
 	})
 	*/
 	return nil
+}
+
+// Copy item from source to destination bucket
+func (b *S3Backend) CopyObject(sourceObject BucketObject, destinationObject BucketObject) error {
+
+	_, err := b.client.CopyObject(&s3.CopyObjectInput{
+		CopySource: aws.String(sourceObject.FullPath()),
+		Bucket:     aws.String(destinationObject.BucketName),
+		Key:        aws.String(destinationObject.Key),
+	})
+
+	return err
 }

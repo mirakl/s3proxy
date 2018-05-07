@@ -8,12 +8,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/op/go-logging"
 	"net/http"
-	"s3proxy/backend"
-	"s3proxy/logger"
-	"s3proxy/router"
+	"github.com/mirakl/s3proxy/backend"
+	"github.com/mirakl/s3proxy/logger"
+	"github.com/mirakl/s3proxy/router"
 	"testing"
 	"net"
-	"s3proxy/s3proxytest"
+	"github.com/mirakl/s3proxy/s3proxytest"
 )
 
 var (

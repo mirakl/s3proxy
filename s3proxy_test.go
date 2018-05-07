@@ -3,13 +3,13 @@ package main
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/mirakl/s3proxy/backend"
+	"github.com/mirakl/s3proxy/backend/backendtest"
+	"github.com/mirakl/s3proxy/router"
+	"github.com/mirakl/s3proxy/s3proxytest"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"os"
-	"s3proxy/backend"
-	"s3proxy/backend/backendtest"
-	"s3proxy/router"
-	"s3proxy/s3proxytest"
 	"testing"
 	"time"
 )
@@ -103,6 +103,52 @@ func TestDeleteOK(t *testing.T) {
 		objmap := unmarshallJSON(t, w.Body.Bytes())
 		assert.Contains(t, objmap["response"], "ok")
 	}
+}
+
+func TestCopyOK(t *testing.T) {
+	w := s3proxytest.ServeCopyObject(t, r, dummyBucket, dummyFile, dummyBucket, dummyFile+"2", "")
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	objmap := unmarshallJSON(t, w.Body.Bytes())
+	assert.Contains(t, objmap["response"], "ok")
+}
+
+func TestCopyMissingDestinationBucket(t *testing.T) {
+	w := s3proxytest.ServeCopyObject(t, r, dummyBucket, dummyFile, "", dummyFile+"2", "")
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	objmap := unmarshallJSON(t, w.Body.Bytes())
+	assert.Contains(t, objmap["error"], "Missing destination bucket")
+}
+
+func TestCopyMissingDestinationKey(t *testing.T) {
+	w := s3proxytest.ServeCopyObject(t, r, dummyBucket, dummyFile, dummyBucket, "", "")
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	objmap := unmarshallJSON(t, w.Body.Bytes())
+	assert.Contains(t, objmap["error"], "Missing destination key")
+}
+
+func TestCopyNoSuchBucket(t *testing.T) {
+	w := s3proxytest.ServeCopyObject(t, r, "notfound", dummyFile, dummyBucket, dummyFile+"2", "")
+	assert.Equal(t, http.StatusNotFound, w.Code)
+
+	objmap := unmarshallJSON(t, w.Body.Bytes())
+	assert.Contains(t, objmap["error"], "No such bucket")
+
+	w = s3proxytest.ServeCopyObject(t, r, dummyBucket, dummyFile, "notfound", dummyFile+"2", "")
+	assert.Equal(t, http.StatusNotFound, w.Code)
+
+	objmap = unmarshallJSON(t, w.Body.Bytes())
+	assert.Contains(t, objmap["error"], "No such bucket")
+}
+
+func TestCopyNoSuchKey(t *testing.T) {
+	w := s3proxytest.ServeCopyObject(t, r, dummyBucket, "/notfound", dummyBucket, dummyFile+"2", "")
+	assert.Equal(t, http.StatusNotFound, w.Code)
+
+	objmap := unmarshallJSON(t, w.Body.Bytes())
+	assert.Contains(t, objmap["error"], "No such key")
 }
 
 // Check if we are getting a 500 when we have a panic. Should be handle by the recovery middleware
