@@ -147,6 +147,10 @@ s3proxy responds directly to the following endpoints.
 * Delete object : `DELETE /api/v1/object/:bucket/:key`  
     - return an 200 OK response : delete the object defined by the bucket and the key
     
+* Bulk Delete object : `POST /api/v1/object/delete/:bucket` with a body containing list of keys "key=...&key=..."  
+    - return an 200 OK response : delete the object defined by the bucket and the key
+    - return 400 Bad request if key parameter is missing
+
 * Copy object : `POST /api/v1/object/copy/:bucket/:key?destBucket=...&destKey=...`
     - return an 200 OK : copy the object defined by the bucket and the key to the destBucket and destKey
     - return 400 Bad request if destBucket or destKey are missing
@@ -201,6 +205,18 @@ curl -H "Authorization: ${API_KEY}" -X DELETE \
 Response : HTTP CODE 200
 
 `{"response" : "ok"}`
+
+* Bulk delete an object :
+
+```
+curl -H "Authorization: ${API_KEY}" -d "key=/folder1/file1.txt&key=/folder1/file2.txt" \ 
+    http://localhost:8080/api/v1/object/my-bucket`
+```
+
+Response : HTTP CODE 200
+
+`{"response" : "ok"}`
+
 
 * Copy an object :
 

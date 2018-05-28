@@ -1,4 +1,4 @@
-FROM golang:1.9.4-stretch as builder
+FROM golang:1.10.2-stretch as builder
 
 ARG VERSION
 

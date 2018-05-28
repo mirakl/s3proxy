@@ -105,6 +105,19 @@ func TestDeleteOK(t *testing.T) {
 	}
 }
 
+func TestBulkDeleteOK(t *testing.T) {
+	w := s3proxytest.ServeBulkDeleteObject(t, r, dummyBucket, []string{"/toto/file1", "/toto/file2", "/toto/file2"}, "")
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	objmap := unmarshallJSON(t, w.Body.Bytes())
+	assert.Contains(t, objmap["response"], "ok")
+}
+
+func TestBulkDelete400BadRequest(t *testing.T) {
+	w := s3proxytest.ServeBulkDeleteObject(t, r, dummyBucket, []string{}, "")
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
 func TestCopyOK(t *testing.T) {
 	w := s3proxytest.ServeCopyObject(t, r, dummyBucket, dummyFile, dummyBucket, dummyFile+"2", "")
 	assert.Equal(t, http.StatusOK, w.Code)
