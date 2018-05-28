@@ -23,6 +23,8 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"strconv"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -127,10 +129,16 @@ func WaitForBucket(t *testing.T, bucketName string, config backend.S3BackendConf
 	assert.Fail(t, fmt.Sprintf("Bucket '%s' not found !", bucketName))
 }
 
-func ServeHTTP(t *testing.T, r *gin.Engine, method string, url string, authorization string) *httptest.ResponseRecorder {
+func ServeHTTPWithBody(t *testing.T, r *gin.Engine, method string, url string, body io.Reader, bodySize int, authorization string) *httptest.ResponseRecorder {
 	w := httptest.NewRecorder()
-	req, err := http.NewRequest(method, url, nil)
+
+	req, err := http.NewRequest(method, url, body)
 	assert.Nil(t, err)
+
+	if body != nil {
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		req.Header.Set("Content-Length", strconv.Itoa(bodySize))
+	}
 
 	if authorization != "" {
 		req.Header.Set("Authorization", authorization)
@@ -139,6 +147,10 @@ func ServeHTTP(t *testing.T, r *gin.Engine, method string, url string, authoriza
 	r.ServeHTTP(w, req)
 
 	return w
+}
+
+func ServeHTTP(t *testing.T, r *gin.Engine, method string, url string, authorization string) *httptest.ResponseRecorder {
+	return ServeHTTPWithBody(t, r, method, url, nil, 0, authorization)
 }
 
 func ServeCreatePresignedURLForUpload(t *testing.T, r *gin.Engine, bucket string, key string, authorization string) *httptest.ResponseRecorder {
@@ -151,6 +163,16 @@ func ServeCreatePresignedURLForDownload(t *testing.T, r *gin.Engine, bucket stri
 
 func ServeDeleteObject(t *testing.T, r *gin.Engine, bucket string, key string, authorization string) *httptest.ResponseRecorder {
 	return ServeHTTP(t, r, http.MethodDelete, fmt.Sprintf("/api/v1/object/%v%v", bucket, key), authorization)
+}
+
+func ServeBulkDeleteObject(t *testing.T, r *gin.Engine, bucket string, keys []string, authorization string) *httptest.ResponseRecorder {
+	data := url.Values{}
+
+	for _, v := range keys {
+		data.Add("key", v)
+	}
+
+	return ServeHTTPWithBody(t, r, http.MethodPost, fmt.Sprintf("/api/v1/object/delete/%v", bucket), strings.NewReader(data.Encode()), len(data.Encode()), authorization)
 }
 
 func ServeCopyObject(t *testing.T, r *gin.Engine, sourceBucket string, sourceKey string, destinationBucket string, destinationKey string, authorization string) *httptest.ResponseRecorder {
@@ -373,6 +395,21 @@ func deleteFile(t *testing.T, host string, key string, apiKey string) int {
 	return statusCode
 }
 
+func deleteBatchFile(t *testing.T, host string, bucket string, keys []string, apiKey string) int {
+
+	data := url.Values{}
+
+	for _, v := range keys {
+		data.Add("key", v)
+	}
+
+	endpoint := "http://" + host + "/api/v1/object/delete/" + bucket
+
+	statusCode, _ := httpCall(t, http.MethodPost, endpoint, "application/x-www-form-urlencoded", apiKey, int64(len(data.Encode())), strings.NewReader(data.Encode()))
+
+	return statusCode
+}
+
 // Copy file
 func copyFile(t *testing.T, host string, sourceBucket string, sourceKey string, destinationBucket string, destinationKey string, apiKey string) (int, string) {
 
@@ -471,7 +508,7 @@ func checkCopy(t *testing.T, s3proxyHost string, sourceBucket string, sourceKey 
 	require.True(t, verifyFileCheckSumEquality(t, sourceFile, destinationFile))
 }
 
-// checkDownload checks delete scenario : delete the file + try to download again
+// checkDelete checks delete scenario : delete the file + try to download again
 func checkDelete(t *testing.T, s3proxyHost string, fullKey string) {
 	// Delete the file should return 200
 	require.Equal(t, http.StatusOK, deleteFile(t, s3proxyHost, fullKey, ServerAPIKey))
@@ -479,6 +516,19 @@ func checkDelete(t *testing.T, s3proxyHost string, fullKey string) {
 	// Last check, try to download again the file
 	// should return 404 because the file has been deleted
 	checkDownload(t, s3proxyHost, fullKey, http.StatusNotFound)
+}
+
+// checkDelete checks delete scenario : delete the file + try to download again => should return 404
+func checkBatchDelete(t *testing.T, s3proxyHost string, bucket string, keys []string) {
+	// Delete the files should return 200
+	require.Equal(t, http.StatusOK, deleteBatchFile(t, s3proxyHost, bucket, keys, ServerAPIKey))
+
+	for _, key := range keys {
+		// Last check, try to download again the file
+		// should return 404 because the file has been deleted
+		file := checkDownload(t, s3proxyHost, bucket+key, http.StatusNotFound)
+		defer os.Remove(file.Name())
+	}
 }
 
 // Used for integration and end-to-end test with the following scenario :
@@ -489,6 +539,7 @@ func checkDelete(t *testing.T, s3proxyHost string, fullKey string) {
 // 3- Check if the files are identical (checksum MD5)
 // 4- Delete the file
 // 5- Try to download the file again => should get 404
+// 6- Batch delete files
 func RunSimpleScenarioForS3proxy(t *testing.T, s3proxyHost string) {
 	bucket := "s3proxy-bucket"
 	key := "/dummyfolder/dummyfile"
@@ -513,4 +564,12 @@ func RunSimpleScenarioForS3proxy(t *testing.T, s3proxyHost string) {
 
 	// DELETE object
 	checkDelete(t, s3proxyHost, fullKey+"2")
+
+	// COPY objects for bulk delete check
+	checkCopy(t, s3proxyHost, bucket, key, bucket, key+"3")
+	checkCopy(t, s3proxyHost, bucket, key, bucket, key+"4")
+	checkCopy(t, s3proxyHost, bucket, key, bucket, key+"5")
+
+	keys := []string{key + "3", key + "4", key + "5"}
+	checkBatchDelete(t, s3proxyHost, bucket, keys)
 }

@@ -16,6 +16,9 @@ type Backend interface {
 	// DeleteObject delete an object in a bucket
 	DeleteObject(object BucketObject) error
 
+	// BatchDeleteObject delete an object in a bucket
+	BatchDeleteObjects(objects []BucketObject) error
+
 	// CopyObject copies one item from a bucket to another
 	// sourceObject : source object (ex: mybucket and /folder/item)
 	// destinationObject : destination object (ex: mybucket and /folder/item2)

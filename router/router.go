@@ -74,6 +74,43 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 
 	objectApiV1 := engine.Group("/api/v1/object")
 
+	type DeleteForm struct {
+		Key []string `form:"key" binding:"required"`
+	}
+
+	objectApiV1.POST("/delete/:bucket", func(c *gin.Context) {
+
+		var body DeleteForm
+		if err := c.Bind(&body); err != nil {
+			log.Error("Failed to parse body %s", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse body %s " + err.Error()})
+			return
+		}
+
+		bucket := c.Param("bucket")
+
+		objectsToDelete := make([]backend.BucketObject, len(body.Key))
+
+		for index, key := range body.Key {
+			objectsToDelete[index] = backend.BucketObject{
+				BucketName: bucket,
+				Key:        key,
+			}
+		}
+
+		err := s3Backend.BatchDeleteObjects(objectsToDelete)
+
+		if err != nil {
+			log.Error("Failed to delete objects %v %s", len(objectsToDelete), bucket, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete objects " + bucket})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"response": "ok"})
+
+		return
+	})
+
 	objectApiV1.DELETE("/:bucket/*key", func(c *gin.Context) {
 
 		var (
