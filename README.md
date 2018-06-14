@@ -36,7 +36,7 @@ This presigned URL has a duration period and can be used by any basic HTTP clien
 
 * run `make`
 
-To ensure dependencies : `make deps`
+To ensure dependencies : `make dep`
 
 
 ## Build the docker image
