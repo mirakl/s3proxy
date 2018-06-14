@@ -5,8 +5,8 @@
 package test
 
 import (
-	"testing"
 	"github.com/mirakl/s3proxy/s3proxytest"
+	"testing"
 )
 
 func TestEnd2End(t *testing.T) {
