@@ -5,15 +5,16 @@
 package test
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/op/go-logging"
+	"net"
 	"net/http"
+	"testing"
+
+	"github.com/gin-gonic/gin"
 	"github.com/mirakl/s3proxy/backend"
 	"github.com/mirakl/s3proxy/logger"
 	"github.com/mirakl/s3proxy/router"
-	"testing"
-	"net"
 	"github.com/mirakl/s3proxy/s3proxytest"
+	"github.com/op/go-logging"
 )
 
 var (

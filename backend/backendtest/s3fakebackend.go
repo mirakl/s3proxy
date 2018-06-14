@@ -2,11 +2,12 @@
 package backendtest
 
 import (
+	"strings"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/mirakl/s3proxy/backend"
-	"strings"
-	"time"
 )
 
 // S3 implementation for a fake Backend Interface, all methods are the same except delete

@@ -3,6 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"strings"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/mirakl/s3proxy/backend"
 	"github.com/mirakl/s3proxy/logger"
@@ -11,11 +17,6 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	_ "go.uber.org/automaxprocs"
-	"net/http"
-	"os"
-	"os/signal"
-	"strings"
-	"time"
 )
 
 var (

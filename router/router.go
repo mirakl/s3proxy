@@ -2,14 +2,15 @@ package router
 
 import (
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/gin-gonic/gin"
 	"github.com/mirakl/s3proxy/backend"
 	"github.com/mirakl/s3proxy/middleware"
 	"github.com/op/go-logging"
-	"net/http"
-	"time"
 )
 
 var (

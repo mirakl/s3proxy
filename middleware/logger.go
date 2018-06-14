@@ -1,10 +1,11 @@
 package middleware
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/mirakl/s3proxy/util"
 	"github.com/op/go-logging"
-	"time"
 )
 
 // Create a Logger middleware for gin
