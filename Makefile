@@ -7,9 +7,11 @@ VERSION ?= 1.2.0
 
 LDFLAGS=-ldflags "-X main.version=${VERSION}"
 
+GOFILES	= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
+
 default: build
 
-build: clean fmt dep lint
+build: clean fmtcheck dep lint
 	go build -i -v ${LDFLAGS} -o ${NAME}
 
 dep:
@@ -21,8 +23,12 @@ clean:
 lint:
 	${GOPATH}/bin/gometalinter.v2 go --vendor --tests --errors --concurrency=2 --deadline=60s ./...
 
-fmt:
-	go fmt ./...
+fmtcheck: tools.goimports
+	@echo "--> checking code formatting with 'goimports' tool"
+	@! goimports -l $(GOFILES) | grep -vF 'Nope nope nope'
+
+fmt: tools.goimports
+	goimports -w $(GOFILES)
 
 test:
 	go test -v ./...
@@ -49,4 +55,9 @@ ifndef VERSION
 	$(error VERSION is undefined)
 endif
 
+tools.goimports:
+	@command -v goimports >/dev/null ; if [ $$? -ne 0 ]; then \
+		echo "--> installing goimports"; \
+		go get golang.org/x/tools/cmd/goimports; \
+	fi
 .PHONY: test
