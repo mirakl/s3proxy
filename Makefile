@@ -14,13 +14,13 @@ default: build
 build: clean fmtcheck dep lint
 	go build -i -v ${LDFLAGS} -o ${NAME}
 
-dep:
+dep: tools.dep
 	if [ -f "Gopkg.toml" ] ; then dep ensure ; else dep init ; fi
 
 clean:
 	if [ -f "${NAME}" ] ; then rm ${NAME} ; fi
 
-lint:
+lint: tools.gometalinter.v2
 	${GOPATH}/bin/gometalinter.v2 go --vendor --tests --errors --concurrency=2 --deadline=60s ./...
 
 fmtcheck: tools.goimports
@@ -59,5 +59,18 @@ tools.goimports:
 	@command -v goimports >/dev/null ; if [ $$? -ne 0 ]; then \
 		echo "--> installing goimports"; \
 		go get golang.org/x/tools/cmd/goimports; \
+	fi
+
+tools.dep:
+	@command -v dep >/dev/null ; if [ $$? -ne 0 ]; then \
+		echo "--> installing dep"; \
+		go get github.com/golang/dep/cmd/dep; \
+	fi
+
+tools.gometalinter.v2:
+	@command -v gometalinter.v2 >/dev/null ; if [ $$? -ne 0 ]; then \
+		echo "--> installing gometalinter.v2"; \
+		go get gopkg.in/alecthomas/gometalinter.v2; \
+		gometalinter.v2 --install; \
 	fi
 .PHONY: test
