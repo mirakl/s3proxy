@@ -13,12 +13,14 @@ build: clean fmt dep lint
 	go build -i -v ${LDFLAGS} -o ${NAME}
 
 dep:
+	which dep &>/dev/null || go get -u github.com/golang/dep/cmd/dep
 	if [ -f "Gopkg.toml" ] ; then dep ensure ; else dep init ; fi
 
 clean:
 	if [ -f "${NAME}" ] ; then rm ${NAME} ; fi
 
 lint:
+	which gometalinter.v2 &>/dev/null || ( go get -u gopkg.in/alecthomas/gometalinter.v2 && gometalinter.v2 --install )
 	${GOPATH}/bin/gometalinter.v2 go --vendor --tests --errors --concurrency=2 --deadline=60s ./...
 
 fmt:
