@@ -1,9 +1,10 @@
 package logger
 
 import (
-	"github.com/op/go-logging"
 	"log/syslog"
 	"os"
+
+	"github.com/op/go-logging"
 )
 
 var (

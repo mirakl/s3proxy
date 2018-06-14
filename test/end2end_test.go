@@ -6,6 +6,7 @@ package test
 
 import (
 	"testing"
+
 	"github.com/mirakl/s3proxy/s3proxytest"
 )
 

@@ -2,16 +2,17 @@ package main
 
 import (
 	"encoding/json"
+	"net/http"
+	"os"
+	"testing"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/mirakl/s3proxy/backend"
 	"github.com/mirakl/s3proxy/backend/backendtest"
 	"github.com/mirakl/s3proxy/router"
 	"github.com/mirakl/s3proxy/s3proxytest"
 	"github.com/stretchr/testify/assert"
-	"net/http"
-	"os"
-	"testing"
-	"time"
 )
 
 var (
