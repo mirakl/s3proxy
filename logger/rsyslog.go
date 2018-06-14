@@ -1,8 +1,9 @@
 package logger
 
 import (
-	"github.com/op/go-logging"
 	"log/syslog"
+
+	"github.com/op/go-logging"
 )
 
 // RSyslog backend for logging
