@@ -11,7 +11,7 @@ GOFILES	= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 default: build
 
-build: clean fmtcheck dep lint
+build: clean dep fmtcheck lint
 	go build -i -v ${LDFLAGS} -o ${NAME}
 
 dep: tools.dep
@@ -25,6 +25,7 @@ lint: tools.gometalinter.v2
 
 fmtcheck: tools.goimports
 	@echo "--> checking code formatting with 'goimports' tool"
+	@goimports -d $(GOFILES)
 	@! goimports -l $(GOFILES) | grep -vF 'Nope nope nope'
 
 fmt: tools.goimports
