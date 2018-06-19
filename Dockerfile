@@ -22,7 +22,7 @@ RUN make VERSION=${VERSION}
 
 FROM centos:latest
 
-COPY --from=builder /go/src/github.com/mirakl/s3proxy /bin
+COPY --from=builder /go/src/github.com/mirakl/s3proxy/s3proxy /bin
 RUN chmod +x /bin/s3proxy
 
 EXPOSE 8080
