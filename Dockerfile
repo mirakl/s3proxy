@@ -1,3 +1,5 @@
+ARG OSBASE
+
 FROM golang:1.10.2-stretch as builder
 
 ARG VERSION
@@ -20,7 +22,7 @@ COPY *.go ./
 
 RUN make VERSION=${VERSION}
 
-FROM centos:latest
+FROM $OSBASE
 
 COPY --from=builder /go/src/github.com/mirakl/s3proxy/s3proxy /bin
 RUN chmod +x /bin/s3proxy

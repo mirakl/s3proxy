@@ -4,6 +4,7 @@ REMOTE_NAME = ${REGISTRY}/${NAME}
 
 GOPATH ?= ${HOME}/go
 VERSION ?= 1.2.0
+OSBASE ?= centos:7
 
 LDFLAGS=-ldflags "-X main.version=${VERSION}"
 
@@ -45,7 +46,7 @@ end2end-test: docker-image
 	VERSION=${VERSION} docker-compose -f ./test/docker-compose.yml down
 
 docker-image: check-version
-	docker build . -t mirakl/${NAME}:${VERSION} -t ${REMOTE_NAME}:${VERSION} -t ${REMOTE_NAME}:latest --build-arg VERSION=${VERSION}
+	docker build . -t mirakl/${NAME}:${VERSION} -t ${REMOTE_NAME}:${VERSION} -t ${REMOTE_NAME}:latest --build-arg VERSION=${VERSION} --build-arg OSBASE=${OSBASE}
 
 docker-image-push: docker-image
 	docker push ${REMOTE_NAME}:${VERSION}
