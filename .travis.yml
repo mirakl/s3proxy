@@ -1,0 +1,19 @@
+language: go
+
+sudo: false
+
+services:
+  - docker
+
+go:
+  - "1.10"
+
+cache:
+  directories:
+    - vendor
+
+script:
+  - docker version
+  - docker-compose version
+  - make build
+  - make test
