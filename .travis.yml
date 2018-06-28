@@ -1,0 +1,33 @@
+language: go
+
+go:
+  - "1.10"
+
+services:
+  - docker
+
+sudo: required
+
+# we need docker-compose 3.5 at least
+# docker 17.12.0+ is required
+# but in travis image (ubuntu 14.04) docker is 17.09.0-ce
+# so we need to upgrade manually
+# cf official travis doc : https://docs.travis-ci.com/user/docker/#Using-Docker-Compose
+env:
+  - DOCKER_COMPOSE_VERSION=1.21.2
+
+before_install:
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
+
+cache:
+  directories:
+    - vendor
+
+script:
+  - make build
+  - make test
+  - make integration-test
+  - make end2end-test

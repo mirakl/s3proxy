@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/mirakl/s3proxy.svg?branch=master)](https://travis-ci.com/mirakl/s3proxy)
+
 s3proxy
 =======
 
