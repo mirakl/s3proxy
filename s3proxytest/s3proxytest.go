@@ -474,7 +474,7 @@ func checkDownload(t *testing.T, s3proxyHost string, fullKey string, statusCodeT
 	statusCode, downloadUrl := getPresignedUrlForDownload(t, s3proxyHost, fullKey, ServerAPIKey)
 
 	// should return 200
-	require.Equal(t, http.StatusOK, statusCode)
+	require.Equal(t, http.StatusNotFound, statusCode)
 
 	// should have an url
 	require.NotEqual(t, downloadUrl, "")
