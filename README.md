@@ -9,7 +9,7 @@ Why use s3proxy ? To centralize credentials and access rights in your applicatio
 
 ## Architecture
 
-s3proxy has been developped as a REST service. It is generating presigned authentified upload and download URL on a object in a bucket.
+s3proxy has been developed as a REST service. It is generating pre-signed authentified upload and download URL on a object in a bucket.
 This presigned URL has a duration period and can be used by any basic HTTP client in any language.
 
 ## Requirements 
@@ -53,7 +53,7 @@ To ensure dependencies : `make dep`
 
 ## s3proxy Configuration
 
-You can use environnement variables or command line options for configuration.
+You can use environment variables or command line options for configuration.
 
 
 ### Command Line Options
@@ -85,7 +85,7 @@ The following environment variables can be used in place of the corresponding co
 
 The minimum configuration for s3proxy is defined by the AWS credentials, to do so define the following env. variables :
 
-* `AWS_REGION` : endpoint used to interact witj S3 (ex: eu-west-1)
+* `AWS_REGION` : endpoint used to interact with S3 (ex: eu-west-1)
 * `AWS_ACCESS_KEY` : iam user used access key for S3 (from aws console)
 * `AWS_SECRET_ACCESS_KEY` : iam user used secret for S3 (from aws console)
 
@@ -103,7 +103,7 @@ The minimum configuration for minio backend, you can set the following env. vari
 ### Advanced configuration
 
 You can customize the http port, define a remote syslog server for centralized logs or define an s3 compatible backend like minio.
-Minio (https://minio.io) is usefull when you need to run integration tests or develop on local  without access to S3.
+Minio (https://minio.io) is useful when you need to run integration tests or develop on local  without access to S3.
 
 example :
 
@@ -232,7 +232,7 @@ Response : HTTP CODE 200
 `{"response" : "ok"}`
 
 
-* Errors : If an error has occured then a reponse code != 200 is sent with a response body
+* Errors : If an error has occurred then a response code != 200 is sent with a response body
 
 `{"error" : "<message of the error>"}`
 
@@ -266,7 +266,7 @@ Several kind of tests are available :
 ### Unit tests
 
 Unit tests are used to verify the wanted behaviour of the s3proxy.
-They don't need any external components, they us a fake S3 backend for running tests. 
+They don't need any external components, they use a fake S3 backend for running tests. 
 
 To run the unit tests : `make test`
 
