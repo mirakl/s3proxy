@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"fmt"
 	"log/syslog"
 	"os"
 
@@ -22,7 +23,14 @@ func init() {
 
 // Add logging to stdout with rsyslog
 func AddRsyslogBackend(host string) error {
-	backend, err := NewRSyslogBackend("s3proxy", host, syslog.LOG_LOCAL0, "s3proxy_none_none_central")
+	const (
+		mtype     = "generic"
+		mserver   = "s3proxy"
+		menv      = "none"
+		namespace = "central"
+	)
+
+	backend, err := NewRSyslogBackend(host, syslog.LOG_LOCAL0, fmt.Sprintf("%s_%s_%s_%s", mtype, mserver, menv, namespace))
 	if err != nil {
 		return err
 	}

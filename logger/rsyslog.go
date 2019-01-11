@@ -12,7 +12,7 @@ type RSyslogBackend struct {
 }
 
 // Create a new RSyslog backend
-func NewRSyslogBackend(prefix string, host string, priority syslog.Priority, tag string) (b *RSyslogBackend, err error) {
+func NewRSyslogBackend(host string, priority syslog.Priority, tag string) (b *RSyslogBackend, err error) {
 	var w *syslog.Writer
 	w, err = syslog.Dial("udp", host, priority, tag)
 	return &RSyslogBackend{w}, err
