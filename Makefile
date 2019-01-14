@@ -20,7 +20,7 @@ clean:
 	if [ -f "${NAME}" ] ; then rm ${NAME} ; fi
 
 lint: tools.gometalinter.v2
-	${GOPATH}/bin/gometalinter.v2 go --vendor --tests --errors --concurrency=2 --deadline=60s ./...
+	gometalinter.v2 go --vendor --tests --errors --concurrency=2 --deadline=60s ./...
 
 fmtcheck: tools.goimports
 	@echo "--> checking code formatting with 'goimports' tool"

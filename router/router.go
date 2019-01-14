@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mirakl/s3proxy/backend"
 	"github.com/mirakl/s3proxy/middleware"
-	"github.com/op/go-logging"
+	logging "github.com/op/go-logging"
 )
 
 var (

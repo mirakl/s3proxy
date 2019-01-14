@@ -5,7 +5,7 @@ import (
 	"net/http/httputil"
 
 	"github.com/gin-gonic/gin"
-	"github.com/op/go-logging"
+	logging "github.com/op/go-logging"
 )
 
 // Creates a Recovery middlware, in case of a fatal error returns 500

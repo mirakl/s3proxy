@@ -26,7 +26,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-errors/errors"
 	"github.com/mirakl/s3proxy/backend"
-	"github.com/op/go-logging"
+	logging "github.com/op/go-logging"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
