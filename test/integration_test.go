@@ -14,7 +14,7 @@ import (
 	"github.com/mirakl/s3proxy/logger"
 	"github.com/mirakl/s3proxy/router"
 	"github.com/mirakl/s3proxy/s3proxytest"
-	"github.com/op/go-logging"
+	logging "github.com/op/go-logging"
 )
 
 var (

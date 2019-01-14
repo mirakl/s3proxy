@@ -4,7 +4,7 @@ import (
 	"log/syslog"
 	"os"
 
-	"github.com/op/go-logging"
+	logging "github.com/op/go-logging"
 )
 
 var (

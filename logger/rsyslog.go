@@ -3,7 +3,7 @@ package logger
 import (
 	"log/syslog"
 
-	"github.com/op/go-logging"
+	logging "github.com/op/go-logging"
 )
 
 // RSyslog backend for logging

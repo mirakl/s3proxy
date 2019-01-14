@@ -13,7 +13,7 @@ import (
 	"github.com/mirakl/s3proxy/backend"
 	"github.com/mirakl/s3proxy/logger"
 	"github.com/mirakl/s3proxy/router"
-	"github.com/op/go-logging"
+	logging "github.com/op/go-logging"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	_ "go.uber.org/automaxprocs"
