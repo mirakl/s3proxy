@@ -24,7 +24,7 @@ RUN make VERSION=${VERSION}
 FROM golang:1.10.2-stretch as lib-builder
 
 WORKDIR /root
-RUN git clone https://github.com/damienleger/dns-aaaa-no-more.git && \
+RUN git clone https://github.com/mirakl/dns-aaaa-no-more.git && \
     cd dns-aaaa-no-more && \
     make
 
