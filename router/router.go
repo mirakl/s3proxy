@@ -80,6 +80,7 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 		if err := c.Bind(&body); err != nil {
 			log.Error("Failed to parse body %s", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse body %s " + err.Error()})
+			return
 		}
 
 		bucket := c.Param("bucket")
