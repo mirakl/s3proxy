@@ -30,7 +30,6 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 	// health check
 	engine.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"response": "ok", "version": version})
-		return
 	})
 
 	presignedURLApiV1 := engine.Group("/api/v1/presigned/url")
@@ -49,8 +48,6 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 		}
 
 		c.JSON(http.StatusOK, gin.H{"url": url})
-
-		return
 	})
 
 	// create presigned url for a file download
@@ -69,8 +66,6 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 		}
 
 		c.JSON(http.StatusOK, gin.H{"url": url})
-
-		return
 	})
 
 	objectApiV1 := engine.Group("/api/v1/object")
@@ -85,7 +80,6 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 		if err := c.Bind(&body); err != nil {
 			log.Error("Failed to parse body %s", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse body %s " + err.Error()})
-			return
 		}
 
 		bucket := c.Param("bucket")
@@ -108,8 +102,6 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 		}
 
 		c.JSON(http.StatusOK, gin.H{"response": "ok"})
-
-		return
 	})
 
 	objectApiV1.DELETE("/:bucket/*key", func(c *gin.Context) {
@@ -128,8 +120,6 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 		}
 
 		c.JSON(http.StatusOK, gin.H{"response": "ok"})
-
-		return
 	})
 
 	objectApiV1.POST("/copy/:bucket/*key", func(c *gin.Context) {
@@ -174,8 +164,6 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 		}
 
 		c.JSON(http.StatusOK, gin.H{"response": "ok"})
-
-		return
 	})
 
 	return engine

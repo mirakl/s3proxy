@@ -10,17 +10,14 @@ GOFILES	= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 default: build
 
-build: clean dep fmtcheck lint
+build: clean fmtcheck lint
 	go build -i -v ${LDFLAGS} -o ${NAME}
-
-dep: tools.dep
-	if [ -f "Gopkg.toml" ] ; then dep ensure ; else dep init ; fi
 
 clean:
 	if [ -f "${NAME}" ] ; then rm ${NAME} ; fi
 
-lint: tools.gometalinter.v2
-	gometalinter.v2 go --vendor --tests --errors --concurrency=2 --deadline=60s ./...
+lint: tools.golangci-lint
+	bin/golangci-lint run
 
 fmtcheck: tools.goimports
 	@echo "--> checking code formatting with 'goimports' tool"
@@ -61,16 +58,9 @@ tools.goimports:
 		go get golang.org/x/tools/cmd/goimports; \
 	fi
 
-tools.dep:
-	@command -v dep >/dev/null ; if [ $$? -ne 0 ]; then \
-		echo "--> installing dep"; \
-		go get github.com/golang/dep/cmd/dep; \
-	fi
-
-tools.gometalinter.v2:
-	@command -v gometalinter.v2 >/dev/null ; if [ $$? -ne 0 ]; then \
-		echo "--> installing gometalinter.v2"; \
-		go get gopkg.in/alecthomas/gometalinter.v2; \
-		gometalinter.v2 --install; \
+tools.golangci-lint:
+	@command -v bin/golangci-lint >/dev/null ; if [ $$? -ne 0 ]; then \
+		echo "--> installing golangci-lint"; \
+		curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.17.1; \
 	fi
 .PHONY: test

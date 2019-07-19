@@ -1,9 +1,10 @@
 .DS_Store
 .idea
-s3proxy
+/s3proxy
 *.iml
 .minio
 .s3proxy
 vendor
 _vendor*
 Gopkg.*
+/bin/
