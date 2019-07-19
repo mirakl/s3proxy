@@ -15,6 +15,7 @@ sudo: required
 # cf official travis doc : https://docs.travis-ci.com/user/docker/#Using-Docker-Compose
 env:
   - DOCKER_COMPOSE_VERSION=1.21.2
+  - GO111MODULE=on
 
 before_install:
   - sudo rm /usr/local/bin/docker-compose
