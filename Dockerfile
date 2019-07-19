@@ -7,18 +7,13 @@ WORKDIR $SRC_DIR
 
 RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.17.1
 
+ENV GO111MODULE on
+
 COPY go.mod go.sum ./
 
 RUN go mod download
 
-COPY backend/ ./backend
-COPY logger/ ./logger
-COPY middleware/ ./middleware
-COPY router/ ./router
-COPY s3proxytest/ ./s3proxytest
-COPY util/ ./util
-COPY Makefile ./
-COPY *.go ./
+COPY . ./
 
 RUN make VERSION=${VERSION}
 

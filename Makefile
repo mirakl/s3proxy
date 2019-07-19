@@ -30,18 +30,21 @@ fmt: tools.goimports
 test:
 	go test -v ./...
 
-integration-test:
+integration-test: docker-build-image
 	docker-compose -f ./test/docker-compose.yml up -d minio rsyslog createbuckets
-	docker run --rm --net=s3proxy-network -v ${GOPATH}:/go -i golang go test -v github.com/mirakl/s3proxy/test/... -tags=integration
+	docker run --rm --net=s3proxy-network -i mirakl/${NAME}-build go test -v ./test -tags=integration
 	docker-compose -f ./test/docker-compose.yml down
 
-end2end-test: docker-image
+end2end-test: docker-build-image
 	VERSION=${VERSION} docker-compose -f ./test/docker-compose.yml up -d
-	docker run --rm --net=s3proxy-network -v ${GOPATH}:/go -i golang go test -v github.com/mirakl/s3proxy/test/... -tags=end2end
+	docker run --rm --net=s3proxy-network -i mirakl/${NAME}-build go test -v ./test -tags=end2end
 	VERSION=${VERSION} docker-compose -f ./test/docker-compose.yml down
 
 docker-image: check-version
 	docker build . -t mirakl/${NAME}:${VERSION} -t ${REMOTE_NAME}:${VERSION} -t ${REMOTE_NAME}:latest --build-arg VERSION=${VERSION}
+
+docker-build-image:
+	docker build . -t mirakl/${NAME}-build --target app-builder --build-arg VERSION=${VERSION}
 
 docker-image-push: docker-image
 	docker push ${REMOTE_NAME}:${VERSION}
