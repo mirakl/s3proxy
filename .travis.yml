@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - "1.10"
+  - "1.12"
 
 services:
   - docker
@@ -14,17 +14,15 @@ sudo: required
 # so we need to upgrade manually
 # cf official travis doc : https://docs.travis-ci.com/user/docker/#Using-Docker-Compose
 env:
-  - DOCKER_COMPOSE_VERSION=1.21.2
+  global:
+    - DOCKER_COMPOSE_VERSION=1.21.2
+    - GO111MODULE=on
 
 before_install:
   - sudo rm /usr/local/bin/docker-compose
   - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
   - chmod +x docker-compose
   - sudo mv docker-compose /usr/local/bin
-
-cache:
-  directories:
-    - vendor
 
 script:
   - make build

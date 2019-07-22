@@ -1,27 +1,23 @@
-FROM golang:1.10.2-stretch as app-builder
+FROM golang:1.12-stretch as app-builder
 
 ARG VERSION
 
-RUN go get -u github.com/golang/dep/cmd/dep
-RUN go get -u gopkg.in/alecthomas/gometalinter.v2
-RUN gometalinter.v2 --install
-
-ENV SRC_DIR /go/src/github.com/mirakl/s3proxy
+ENV SRC_DIR /s3proxy
 WORKDIR $SRC_DIR
 
-COPY backend/ ./backend
-COPY logger/ ./logger
-COPY middleware/ ./middleware
-COPY router/ ./router
-COPY s3proxytest/ ./s3proxytest
-COPY util/ ./util
-COPY Makefile ./
-COPY *.go ./
+RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.17.1
+
+ENV GO111MODULE on
+
+COPY go.mod go.sum ./
+
+RUN go mod download
+
+COPY . ./
 
 RUN make VERSION=${VERSION}
 
-
-FROM golang:1.10.2-stretch as lib-builder
+FROM golang:1.12-stretch as lib-builder
 
 WORKDIR /root
 RUN git clone https://github.com/mirakl/dns-aaaa-no-more.git && \
@@ -32,7 +28,7 @@ RUN git clone https://github.com/mirakl/dns-aaaa-no-more.git && \
 FROM centos:latest
 
 COPY --from=lib-builder /root/dns-aaaa-no-more/getaddrinfo.so /dns-aaaa-no-more/
-COPY --from=app-builder /go/src/github.com/mirakl/s3proxy /bin
+COPY --from=app-builder /s3proxy /bin
 RUN chmod +x /bin/s3proxy
 
 EXPOSE 8080

@@ -20,7 +20,7 @@ func newS3FakeBackend(config []backend.S3BackendConfig) (*S3FakeBackend, error) 
 	var s3backend backend.Backend
 	var err error
 
-	if config == nil || len(config) == 0 {
+	if len(config) == 0 {
 		s3backend, err = backend.NewS3Backend()
 	} else {
 		s3backend, err = backend.NewS3Backend(config[0])

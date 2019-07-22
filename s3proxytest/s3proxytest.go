@@ -239,15 +239,18 @@ func createTempFileInMB(t *testing.T, size int) (*os.File, int64) {
 
 		randomBytes := make([]byte, 1024)
 
-		var i int = 1
-		for i = 0; i < size*1024; i++ {
+		for i := 0; i < size*1024; i++ {
 			_, err := rand.Read(randomBytes)
 			assert.Nil(t, err)
-			w.Write(randomBytes)
+			_, err = w.Write(randomBytes)
+			assert.Nil(t, err)
 		}
 
 		// Reset file pointer to the beginning of the file
-		defer file.Seek(0, 0)
+		defer func() {
+			_, err := file.Seek(0, 0)
+			assert.Nil(t, err)
+		}()
 
 		err = w.Flush()
 		assert.Nil(t, err)
@@ -377,7 +380,8 @@ func downloadFile(t *testing.T, url string, apiKey string) (int, *os.File) {
 
 	statusCode, binary := httpCall(t, http.MethodGet, url, "binary/octet-stream", apiKey, -1, nil)
 
-	io.Copy(file, bytes.NewReader(binary))
+	_, err := io.Copy(file, bytes.NewReader(binary))
+	assert.Nil(t, err)
 
 	return statusCode, file
 }

@@ -10,17 +10,14 @@ GOFILES	= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 default: build
 
-build: clean dep fmtcheck lint
+build: clean fmtcheck lint
 	go build -i -v ${LDFLAGS} -o ${NAME}
-
-dep: tools.dep
-	if [ -f "Gopkg.toml" ] ; then dep ensure ; else dep init ; fi
 
 clean:
 	if [ -f "${NAME}" ] ; then rm ${NAME} ; fi
 
-lint: tools.gometalinter.v2
-	gometalinter.v2 go --vendor --tests --errors --concurrency=2 --deadline=60s ./...
+lint: tools.golangci-lint
+	bin/golangci-lint run
 
 fmtcheck: tools.goimports
 	@echo "--> checking code formatting with 'goimports' tool"
@@ -33,18 +30,21 @@ fmt: tools.goimports
 test:
 	go test -v ./...
 
-integration-test:
+integration-test: docker-build-image
 	docker-compose -f ./test/docker-compose.yml up -d minio rsyslog createbuckets
-	docker run --rm --net=s3proxy-network -v ${GOPATH}:/go -i golang go test -v github.com/mirakl/s3proxy/test/... -tags=integration
+	docker run --rm --net=s3proxy-network -i mirakl/${NAME}-build go test -v ./test -tags=integration
 	docker-compose -f ./test/docker-compose.yml down
 
-end2end-test: docker-image
+end2end-test: docker-build-image
 	VERSION=${VERSION} docker-compose -f ./test/docker-compose.yml up -d
-	docker run --rm --net=s3proxy-network -v ${GOPATH}:/go -i golang go test -v github.com/mirakl/s3proxy/test/... -tags=end2end
+	docker run --rm --net=s3proxy-network -i mirakl/${NAME}-build go test -v ./test -tags=end2end
 	VERSION=${VERSION} docker-compose -f ./test/docker-compose.yml down
 
 docker-image: check-version
 	docker build . -t mirakl/${NAME}:${VERSION} -t ${REMOTE_NAME}:${VERSION} -t ${REMOTE_NAME}:latest --build-arg VERSION=${VERSION}
+
+docker-build-image:
+	docker build . -t mirakl/${NAME}-build --target app-builder --build-arg VERSION=${VERSION}
 
 docker-image-push: docker-image
 	docker push ${REMOTE_NAME}:${VERSION}
@@ -61,16 +61,9 @@ tools.goimports:
 		go get golang.org/x/tools/cmd/goimports; \
 	fi
 
-tools.dep:
-	@command -v dep >/dev/null ; if [ $$? -ne 0 ]; then \
-		echo "--> installing dep"; \
-		go get github.com/golang/dep/cmd/dep; \
-	fi
-
-tools.gometalinter.v2:
-	@command -v gometalinter.v2 >/dev/null ; if [ $$? -ne 0 ]; then \
-		echo "--> installing gometalinter.v2"; \
-		go get gopkg.in/alecthomas/gometalinter.v2; \
-		gometalinter.v2 --install; \
+tools.golangci-lint:
+	@command -v bin/golangci-lint >/dev/null ; if [ $$? -ne 0 ]; then \
+		echo "--> installing golangci-lint"; \
+		curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.17.1; \
 	fi
 .PHONY: test

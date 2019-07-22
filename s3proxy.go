@@ -29,27 +29,27 @@ var (
 func initViper() {
 
 	pflag.StringP("api-key", "x", "", "Define server side API key for API call authorization")
-	viper.BindPFlag("api-key", pflag.Lookup("api-key"))
+	die(viper.BindPFlag("api-key", pflag.Lookup("api-key")))
 	viper.SetDefault("api-key", "")
 
 	pflag.IntP("http-port", "p", 8080, "The port that the proxy binds to")
-	viper.BindPFlag("http-port", pflag.Lookup("http-port"))
+	die(viper.BindPFlag("http-port", pflag.Lookup("http-port")))
 	viper.SetDefault("http-port", 8080)
 
 	pflag.StringP("use-rsyslog", "r", "", "Add rsyslog as second logging destination by specifying the rsyslog host and port (ex. localhost:514)")
-	viper.BindPFlag("use-rsyslog", pflag.Lookup("use-rsyslog"))
+	die(viper.BindPFlag("use-rsyslog", pflag.Lookup("use-rsyslog")))
 	viper.SetDefault("use-rsyslog", "")
 
 	pflag.StringP("use-minio", "m", "", "Use minio as backend by specifying the minio server host and port (ex. localhost:9000)")
-	viper.BindPFlag("use-minio", pflag.Lookup("use-minio"))
+	die(viper.BindPFlag("use-minio", pflag.Lookup("use-minio")))
 	viper.SetDefault("use-minio", "")
 
 	pflag.StringP("minio-access-key", "a", "", "Minion AccessKey equivalent to a AWS_ACCESS_KEY_ID")
-	viper.BindPFlag("minio-access-key", pflag.Lookup("minio-access-key"))
+	die(viper.BindPFlag("minio-access-key", pflag.Lookup("minio-access-key")))
 	viper.SetDefault("minio-access-key", "")
 
 	pflag.StringP("minio-secret-key", "s", "", "Minion AccessKey equivalent to a AWS_SECRET_ACCESS_KEY")
-	viper.BindPFlag("minio-secret-key", pflag.Lookup("minio-secret-key"))
+	die(viper.BindPFlag("minio-secret-key", pflag.Lookup("minio-secret-key")))
 	viper.SetDefault("minio-secret-key", "")
 
 	pflag.Parse()
@@ -58,6 +58,12 @@ func initViper() {
 	replacer := strings.NewReplacer("-", "_")
 	viper.SetEnvKeyReplacer(replacer)
 	viper.AutomaticEnv()
+}
+
+func die(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // log info on startup
@@ -132,7 +138,7 @@ func main() {
 	}()
 
 	// graceful shutdown
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
 	log.Info("Shutdown Server ...")

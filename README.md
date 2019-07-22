@@ -15,30 +15,22 @@ This presigned URL has a duration period and can be used by any basic HTTP clien
 ## Requirements 
 
 * Docker version 17.12.0+
-* Go 1.9.2++
+* Go 1.12+
 
 
 ## Build
 
 * Install [Go](https://golang.org/doc/install)
-
 * Set $GOPATH variable, by default it should be something like $HOME/go
-
 * Set $GOBIN variable, by default it should be something like $GOPATH/bin
-
 * Make sure $GOBIN is in your $PATH : `export $PATH=$PATH:$GOBIN`
 
-* Go to $GOPATH/src and checkout the project : `git clone git@github.com:mirakl/s3proxy.git`
+The previous steps are needed for some of the tools this projects uses, mainly goimports.
 
-* Install dep : `go get -u github.com/golang/dep/cmd/dep`
+This project itself uses go modules, and so does NOT need to be in your GOPATH.
+It would be better to clone it outside of the $GOPATH (or else you'll need to export `GO111MODULE=on`). 
 
-* Install gomegalinter (for lint checks) : `go get -u gopkg.in/alecthomas/gometalinter.v2`
-
-* Install linters : `gometalinter.v2 --install`
-
-* run `make`
-
-To ensure dependencies : `make dep`
+Clone the project : `git clone git@github.com:mirakl/s3proxy.git` and run `make`.
 
 
 ## Build the docker image
