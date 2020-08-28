@@ -1,11 +1,11 @@
-FROM golang:1.12-stretch as app-builder
+FROM golang:1.14-stretch as app-builder
 
 ARG VERSION
 
 ENV SRC_DIR /s3proxy
 WORKDIR $SRC_DIR
 
-RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.17.1
+RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.30.0
 
 ENV GO111MODULE on
 
@@ -17,7 +17,7 @@ COPY . ./
 
 RUN make VERSION=${VERSION}
 
-FROM golang:1.12-stretch as lib-builder
+FROM golang:1.14-stretch as lib-builder
 
 WORKDIR /root
 RUN git clone https://github.com/mirakl/dns-aaaa-no-more.git && \

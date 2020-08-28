@@ -68,13 +68,13 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 		c.JSON(http.StatusOK, gin.H{"url": url})
 	})
 
-	objectApiV1 := engine.Group("/api/v1/object")
+	objectAPIV1 := engine.Group("/api/v1/object")
 
 	type DeleteForm struct {
 		Key []string `form:"key" binding:"required"`
 	}
 
-	objectApiV1.POST("/delete/:bucket", func(c *gin.Context) {
+	objectAPIV1.POST("/delete/:bucket", func(c *gin.Context) {
 
 		var body DeleteForm
 		if err := c.Bind(&body); err != nil {
@@ -105,7 +105,7 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 		c.JSON(http.StatusOK, gin.H{"response": "ok"})
 	})
 
-	objectApiV1.DELETE("/:bucket/*key", func(c *gin.Context) {
+	objectAPIV1.DELETE("/:bucket/*key", func(c *gin.Context) {
 
 		var (
 			bucket = c.Param("bucket")
@@ -123,7 +123,7 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 		c.JSON(http.StatusOK, gin.H{"response": "ok"})
 	})
 
-	objectApiV1.POST("/copy/:bucket/*key", func(c *gin.Context) {
+	objectAPIV1.POST("/copy/:bucket/*key", func(c *gin.Context) {
 
 		var (
 			sourceBucket      = c.Param("bucket")
