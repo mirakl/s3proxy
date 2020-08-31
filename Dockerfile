@@ -1,4 +1,4 @@
-FROM golang:1.15-stretch as app-builder
+FROM golang:1.15-buster as app-builder
 
 ARG VERSION
 
@@ -17,7 +17,7 @@ COPY . ./
 
 RUN make VERSION=${VERSION}
 
-FROM golang:1.15-stretch as lib-builder
+FROM golang:1.15-buster as lib-builder
 
 WORKDIR /root
 RUN git clone https://github.com/mirakl/dns-aaaa-no-more.git && \
