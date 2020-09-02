@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/mirakl/s3proxy.svg?branch=master)](https://travis-ci.com/mirakl/s3proxy)
+![CI](https://github.com/mirakl/s3proxy/workflows/CI/badge.svg?branch=master)
 
 s3proxy
 =======
