@@ -6,6 +6,12 @@ s3proxy
 A S3 proxy server between your application and S3 for upload and download of objects. 
 Why use s3proxy ? To centralize credentials and access rights in your application infrastructure.
 
+S3Proxy can create presigned urls to allow another application (e.g. mmp) to upload or download objects from S3, and delete or duplicate objects.
+
+Please note that uploads and downloads are using presigned urls, so S3proxy generates the url and returns it to your app, which then uses it to perform the upload or download.
+Generating a presigned url is purely local and does not entails communicating with S3 (or Minio). This means that the presigned url may be rejected if the S3proxy credentials do not allow accessing the bucket.
+
+Deletes and copies are proxyfied, and S3Proxy itself sends the HTTP request to S3.
 
 ## Architecture
 
