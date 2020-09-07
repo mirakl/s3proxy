@@ -42,7 +42,7 @@ func setupIntegration(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	router := router.NewGinEngine(gin.ReleaseMode, "9.9.9", s3proxytest.UrlExpiration, s3proxytest.ServerAPIKey, s3Backend)
+	router := router.NewGinEngine(gin.ReleaseMode, "9.9.9", s3proxytest.URLExpiration, s3proxytest.ServerAPIKey, s3Backend)
 
 	go func() {
 		log.Debug("Listening on port : %v", listener.Addr())

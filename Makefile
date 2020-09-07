@@ -64,6 +64,6 @@ tools.goimports:
 tools.golangci-lint:
 	@command -v bin/golangci-lint >/dev/null ; if [ $$? -ne 0 ]; then \
 		echo "--> installing golangci-lint"; \
-		curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.17.1; \
+		curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.30.0; \
 	fi
 .PHONY: test

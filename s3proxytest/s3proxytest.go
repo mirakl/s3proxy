@@ -34,7 +34,7 @@ import (
 var (
 	log = logging.MustGetLogger("s3proxy")
 
-	UrlExpiration      = 15 * time.Minute
+	URLExpiration      = 15 * time.Minute
 	ServerAPIKey       = "3f300bdc-0028-11e8-ba89-0ed5f89f718b"
 	MinioBackendConfig = backend.S3BackendConfig{
 		Host:             "minio:9000",
@@ -266,7 +266,7 @@ func createTempFileInMB(t *testing.T, size int) (*os.File, int64) {
 
 // Retrieve a field from a json object
 // only from direct fields, no sub document
-func getFieldFromJson(t *testing.T, json []byte, field string) string {
+func getFieldFromJSON(t *testing.T, json []byte, field string) string {
 	if json != nil {
 		var objmap map[string]interface{}
 
@@ -334,7 +334,7 @@ func getHealthCheck(t *testing.T, host string) (int, string) {
 
 	statusCode, body := httpCall(t, http.MethodGet, endpoint, "", "", -1, nil)
 
-	version := getFieldFromJson(t, body, "version")
+	version := getFieldFromJSON(t, body, "version")
 
 	return statusCode, version
 
@@ -346,13 +346,13 @@ func getHealthCheck(t *testing.T, host string) (int, string) {
 // key : bucket/folder/file.txt
 // apiKey : authorization key
 // returns the http status, the url and if any an error
-func getPresignedUrl(t *testing.T, method string, host string, key string, apiKey string) (int, string) {
+func getPresignedURL(t *testing.T, method string, host string, key string, apiKey string) (int, string) {
 
 	endpoint := "http://" + host + "/api/v1/presigned/url/" + key
 
 	statusCode, body := httpCall(t, method, endpoint, "", apiKey, -1, nil)
 
-	url := getFieldFromJson(t, body, "url")
+	url := getFieldFromJSON(t, body, "url")
 
 	return statusCode, url
 }
@@ -437,33 +437,33 @@ func copyFile(t *testing.T, host string, sourceBucket string, sourceKey string, 
 
 	statusCode, body := httpCall(t, http.MethodPost, endpoint, "", apiKey, -1, nil)
 
-	msg := getFieldFromJson(t, body, "error")
+	msg := getFieldFromJSON(t, body, "error")
 
 	return statusCode, msg
 }
 
 // Wrapper for presigned URL
-func getPresignedUrlForUpload(t *testing.T, host string, key string, apiKey string) (int, string) {
-	return getPresignedUrl(t, http.MethodPost, host, key, apiKey)
+func getPresignedURLForUpload(t *testing.T, host string, key string, apiKey string) (int, string) {
+	return getPresignedURL(t, http.MethodPost, host, key, apiKey)
 }
 
 // Wrapper for presigned URL
-func getPresignedUrlForDownload(t *testing.T, host string, key string, apiKey string) (int, string) {
-	return getPresignedUrl(t, http.MethodGet, host, key, apiKey)
+func getPresignedURLForDownload(t *testing.T, host string, key string, apiKey string) (int, string) {
+	return getPresignedURL(t, http.MethodGet, host, key, apiKey)
 }
 
 // checkUpload checks upload scenario : get presigned url + upload a file
 func checkUpload(t *testing.T, s3proxyHost string, fullKey string) *os.File {
 	// create presigned url for uploading the file
-	statusCode, uploadUrl := getPresignedUrlForUpload(t, s3proxyHost, fullKey, ServerAPIKey)
+	statusCode, uploadURL := getPresignedURLForUpload(t, s3proxyHost, fullKey, ServerAPIKey)
 
 	// should return 200
 	require.Equal(t, http.StatusOK, statusCode)
 
 	// should have an url
-	require.NotEqual(t, uploadUrl, "")
+	require.NotEqual(t, uploadURL, "")
 
-	statusCode, uploadedFile := uploadFile(t, uploadUrl, ServerAPIKey)
+	statusCode, uploadedFile := uploadFile(t, uploadURL, ServerAPIKey)
 	//defer os.Remove(uploadedFile.Name())
 
 	// should return 200
@@ -475,15 +475,15 @@ func checkUpload(t *testing.T, s3proxyHost string, fullKey string) *os.File {
 // checkDownload checks download scenario : get presigned url + download the file
 func checkDownload(t *testing.T, s3proxyHost string, fullKey string, statusCodeToCheck int) *os.File {
 	// create presigned url for downloading the file
-	statusCode, downloadUrl := getPresignedUrlForDownload(t, s3proxyHost, fullKey, ServerAPIKey)
+	statusCode, downloadURL := getPresignedURLForDownload(t, s3proxyHost, fullKey, ServerAPIKey)
 
 	// should return 200
 	require.Equal(t, http.StatusOK, statusCode)
 
 	// should have an url
-	require.NotEqual(t, downloadUrl, "")
+	require.NotEqual(t, downloadURL, "")
 
-	statusCode, downloadedFile := downloadFile(t, downloadUrl, ServerAPIKey)
+	statusCode, downloadedFile := downloadFile(t, downloadURL, ServerAPIKey)
 	//defer os.Remove(downloadedFile.Name())
 
 	// should return 200
