@@ -3,7 +3,7 @@ version: "3.5"
 services:
 
   s3proxy:
-    image: mirakl/s3proxy:${VERSION}
+    image: mirakl/s3proxy-build:latest
     networks:
       - s3proxy-network
     depends_on:
@@ -16,7 +16,7 @@ services:
       - "S3PROXY_MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
       - "S3PROXY_USE_RSYSLOG=rsyslog:514"
       - "S3PROXY_API_KEY=3f300bdc-0028-11e8-ba89-0ed5f89f718b"
-    command: s3proxy
+    command: ./s3proxy
 
   rsyslog:
     image: voxxit/rsyslog

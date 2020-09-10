@@ -2,7 +2,7 @@ NAME = s3proxy
 REMOTE_NAME = ${REGISTRY}${NAME}
 
 GOPATH ?= ${HOME}/go
-VERSION ?= 1.2.1
+VERSION ?= 1.2.2
 
 LDFLAGS=-ldflags "-X main.version=${VERSION}"
 
@@ -36,15 +36,15 @@ integration-test: docker-build-image
 	docker-compose -f ./test/docker-compose.yml down
 
 end2end-test: docker-build-image
-	VERSION=${VERSION} docker-compose -f ./test/docker-compose.yml up -d
+	docker-compose -f ./test/docker-compose.yml up -d
 	docker run --rm --net=s3proxy-network -i mirakl/${NAME}-build go test -v ./test -tags=end2end
-	VERSION=${VERSION} docker-compose -f ./test/docker-compose.yml down
+	docker-compose -f ./test/docker-compose.yml down
 
 docker-image: check-version
 	docker build . -t mirakl/${NAME}:${VERSION} -t ${REMOTE_NAME}:${VERSION} -t ${REMOTE_NAME}:latest --build-arg VERSION=${VERSION}
 
 docker-build-image:
-	docker build . -t mirakl/${NAME}-build --target app-builder --build-arg VERSION=${VERSION}
+	docker build . -t mirakl/${NAME}-build --target app-builder
 
 docker-image-push: docker-image
 	docker push ${REMOTE_NAME}:${VERSION}
