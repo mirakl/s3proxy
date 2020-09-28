@@ -1,7 +1,5 @@
 FROM golang:1.15-buster as app-builder
 
-ARG VERSION
-
 ENV SRC_DIR /s3proxy
 WORKDIR $SRC_DIR
 
@@ -15,7 +13,7 @@ RUN go mod download
 
 COPY . ./
 
-RUN make VERSION=${VERSION}
+RUN make 
 
 FROM golang:1.15-buster as lib-builder
 
