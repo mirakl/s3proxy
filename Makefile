@@ -17,7 +17,7 @@ clean:
 	if [ -f "${NAME}" ] ; then rm ${NAME} ; fi
 
 lint: tools.golangci-lint
-	bin/golangci-lint run
+	bin/golangci-lint --timeout=300s run -v
 
 fmtcheck: tools.goimports
 	@echo "--> checking code formatting with 'goimports' tool"
