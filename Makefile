@@ -2,7 +2,7 @@ NAME = s3proxy
 REMOTE_NAME = ${REGISTRY}${NAME}
 
 GOPATH ?= ${HOME}/go
-VERSION ?= 1.2.2
+VERSION ?= 1.2.3
 
 LDFLAGS=-ldflags "-X main.version=${VERSION}"
 
