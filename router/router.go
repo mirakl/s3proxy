@@ -3,6 +3,7 @@ package router
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -39,10 +40,16 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 
 		bucket := c.Param("bucket")
 		key := c.Param("key")
-
+		urlExpirationParam := c.Query("urlExpiration")
+		if urlExpirationParam != "" {
+			urlExpirationMinutes, err := strconv.Atoi(urlExpirationParam)
+			if err == nil {
+				urlExpiration = time.Duration(urlExpirationMinutes) * time.Minute
+			}
+		}
 		url, err := s3Backend.CreatePresignedURLForUpload(backend.BucketObject{BucketName: bucket, Key: key}, urlExpiration)
 		if err != nil {
-			log.Error("Failed to create presigned PutObject URL for %s %s", key, bucket, err)
+			log.Error("Failed to create presigned PutObject URL for %s %s %s", key, bucket, urlExpiration, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create PutObject URL for " + key})
 			return
 		}
@@ -57,10 +64,16 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 			bucket = c.Param("bucket")
 			key    = c.Param("key")
 		)
-
+		urlExpirationParam := c.Query("urlExpiration")
+		if urlExpirationParam != "" {
+			urlExpirationMinutes, err := strconv.Atoi(urlExpirationParam)
+			if err == nil {
+				urlExpiration = time.Duration(urlExpirationMinutes) * time.Minute
+			}
+		}
 		url, err := s3Backend.CreatePresignedURLForDownload(backend.BucketObject{BucketName: bucket, Key: key}, urlExpiration)
 		if err != nil {
-			log.Error("Failed to create presigned GetObject URL for %s %s", key, bucket, err)
+			log.Error("Failed to create presigned GetObject URL for %s %s %s", key, bucket, urlExpirationParam, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create GetObject URL for " + key})
 			return
 		}
