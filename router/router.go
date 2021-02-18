@@ -37,23 +37,21 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 	// create presigned url for a file upload
 	presignedURLApiV1.POST("/:bucket/*key", func(c *gin.Context) {
 
-		bucket := c.Param("bucket")
-		key := c.Param("key")
-		expiration := c.Param("expiration")
+		var (
+			bucket     = c.Param("bucket")
+			key        = c.Param("key")
+			expiration = c.Param("expiration")
+		)
 
-		if expiration != "" {
-			urlExpirationDuration, err := time.ParseDuration(expiration)
-			if err != nil {
-				log.Error("Failed to parse Duration %s", urlExpirationDuration, err)
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse Duration %s" + expiration})
-				return
-			}
-			urlExpiration = urlExpirationDuration
+		urlExpiration, err := parseExpiration(expiration, urlExpiration)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse Duration " + expiration})
+			return
 		}
 
 		url, err := s3Backend.CreatePresignedURLForUpload(backend.BucketObject{BucketName: bucket, Key: key}, urlExpiration)
 		if err != nil {
-			log.Error("Failed to create presigned PutObject URL for %s %s %s", key, bucket, urlExpiration, err)
+			log.Error("Failed to create presigned PutObject URL for %s %s", key, bucket, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create PutObject URL for " + key})
 			return
 		}
@@ -69,19 +67,16 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 			key        = c.Param("key")
 			expiration = c.Param("expiration")
 		)
-		if expiration != "" {
-			urlExpirationDuration, err := time.ParseDuration(expiration)
-			if err != nil {
-				log.Error("Failed to parse Duration %s", expiration, err)
-				c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse Duration %s" + expiration})
-				return
-			}
-			urlExpiration = urlExpirationDuration
+
+		urlExpiration, err := parseExpiration(expiration, urlExpiration)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse Duration " + expiration})
+			return
 		}
 
 		url, err := s3Backend.CreatePresignedURLForDownload(backend.BucketObject{BucketName: bucket, Key: key}, urlExpiration)
 		if err != nil {
-			log.Error("Failed to create presigned GetObject URL for %s %s %s", key, bucket, expiration, err)
+			log.Error("Failed to create presigned GetObject URL for %s %s", key, bucket, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create GetObject URL for " + key})
 			return
 		}
@@ -189,4 +184,12 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 	})
 
 	return engine
+}
+
+func parseExpiration(s string, fallback time.Duration) (time.Duration, error) {
+	if s == "" {
+		return fallback, nil
+	}
+
+	return time.ParseDuration(s)
 }
