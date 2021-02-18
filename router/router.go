@@ -37,8 +37,17 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 	// create presigned url for a file upload
 	presignedURLApiV1.POST("/:bucket/*key", func(c *gin.Context) {
 
-		bucket := c.Param("bucket")
-		key := c.Param("key")
+		var (
+			bucket     = c.Param("bucket")
+			key        = c.Param("key")
+			expiration = c.Param("expiration")
+		)
+
+		urlExpiration, err := parseExpiration(expiration, urlExpiration)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse Duration " + expiration})
+			return
+		}
 
 		url, err := s3Backend.CreatePresignedURLForUpload(backend.BucketObject{BucketName: bucket, Key: key}, urlExpiration)
 		if err != nil {
@@ -54,9 +63,16 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 	presignedURLApiV1.GET("/:bucket/*key", func(c *gin.Context) {
 
 		var (
-			bucket = c.Param("bucket")
-			key    = c.Param("key")
+			bucket     = c.Param("bucket")
+			key        = c.Param("key")
+			expiration = c.Param("expiration")
 		)
+
+		urlExpiration, err := parseExpiration(expiration, urlExpiration)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse Duration " + expiration})
+			return
+		}
 
 		url, err := s3Backend.CreatePresignedURLForDownload(backend.BucketObject{BucketName: bucket, Key: key}, urlExpiration)
 		if err != nil {
@@ -168,4 +184,12 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 	})
 
 	return engine
+}
+
+func parseExpiration(s string, fallback time.Duration) (time.Duration, error) {
+	if s == "" {
+		return fallback, nil
+	}
+
+	return time.ParseDuration(s)
 }
