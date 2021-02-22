@@ -464,23 +464,7 @@ func checkUpload(t *testing.T, s3proxyHost string, fullKey string, expiration st
 	// create presigned url for uploading the file
 	statusCode, uploadURL := getPresignedURLForUpload(t, s3proxyHost, fullKey, ServerAPIKey, expiration)
 
-	parsedURL, err := url.Parse(uploadURL)
-	assert.Nil(t, err)
-	expiresFromURLParam := parsedURL.Query().Get("X-Amz-Expires")
-	expiresFromURL, err := strconv.ParseInt(expiresFromURLParam, 10, 64)
-	assert.Nil(t, err)
-
-	if expiration != "" {
-		duration, err := time.ParseDuration(expiration)
-		assert.Nil(t, err)
-
-		expectedExpiration := int64(duration.Seconds())
-		require.Equal(t, expectedExpiration, expiresFromURL)
-
-	} else {
-		// default duration is 15m, so 900s
-		require.Equal(t, int64(900), expiresFromURL)
-	}
+	checkExpiration(t, uploadURL, expiration)
 
 	// should return 200
 	require.Equal(t, http.StatusOK, statusCode)
@@ -502,6 +486,8 @@ func checkDownload(t *testing.T, s3proxyHost string, fullKey string, statusCodeT
 	// create presigned url for downloading the file
 	statusCode, downloadURL := getPresignedURLForDownload(t, s3proxyHost, fullKey, ServerAPIKey, expiration)
 
+	checkExpiration(t, downloadURL, expiration)
+
 	// should return 200
 	require.Equal(t, http.StatusOK, statusCode)
 
@@ -515,6 +501,27 @@ func checkDownload(t *testing.T, s3proxyHost string, fullKey string, statusCodeT
 	require.Equal(t, statusCodeToCheck, statusCode)
 
 	return downloadedFile
+}
+
+func checkExpiration(t *testing.T, uploadURL string, expiration string) {
+
+	parsedURL, err := url.Parse(uploadURL)
+	assert.Nil(t, err)
+	expiresFromURLParam := parsedURL.Query().Get("X-Amz-Expires")
+	expiresFromURL, err := strconv.ParseInt(expiresFromURLParam, 10, 64)
+	assert.Nil(t, err)
+
+	if expiration != "" {
+		duration, err := time.ParseDuration(expiration)
+		assert.Nil(t, err)
+
+		expectedExpiration := int64(duration.Seconds())
+		require.Equal(t, expectedExpiration, expiresFromURL)
+
+	} else {
+		// default duration is 15m, so 900s
+		require.Equal(t, int64(900), expiresFromURL)
+	}
 }
 
 // checkDownload checks copy scenario
