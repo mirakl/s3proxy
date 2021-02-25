@@ -506,10 +506,10 @@ func checkDownload(t *testing.T, s3proxyHost string, fullKey string, statusCodeT
 func checkExpiration(t *testing.T, uploadURL string, expiration string) {
 
 	parsedURL, err := url.Parse(uploadURL)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	expiresFromURLParam := parsedURL.Query().Get("X-Amz-Expires")
 	expiresFromURL, err := strconv.ParseInt(expiresFromURLParam, 10, 64)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 
 	if expiration != "" {
 		duration, err := time.ParseDuration(expiration)
