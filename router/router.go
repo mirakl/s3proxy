@@ -40,7 +40,7 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 		var (
 			bucket     = c.Param("bucket")
 			key        = c.Param("key")
-			expiration = c.Param("expiration")
+			expiration = c.Query("expiration")
 		)
 
 		urlExpiration, err := parseExpiration(expiration, urlExpiration)
@@ -65,7 +65,7 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 		var (
 			bucket     = c.Param("bucket")
 			key        = c.Param("key")
-			expiration = c.Param("expiration")
+			expiration = c.Query("expiration")
 		)
 
 		urlExpiration, err := parseExpiration(expiration, urlExpiration)

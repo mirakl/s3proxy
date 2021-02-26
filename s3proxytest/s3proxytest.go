@@ -287,11 +287,17 @@ func getFieldFromJSON(t *testing.T, json []byte, field string) string {
 // contentType : if u want to define one
 // bodySize : if the http call has a body, the size of it
 // body : io.Reader of the body
+// expiration : link expiration duration
 // returns the http status code, the reponse body and if any an error
-func httpCall(t *testing.T, httpMethod string, url string, contentType string, apiKey string, bodySize int64, body io.Reader) (int, []byte) {
-
+func httpCall(t *testing.T, httpMethod string, url string, contentType string, apiKey string, bodySize int64, body io.Reader, expiration string) (int, []byte) {
 	req, err := http.NewRequest(httpMethod, url, nil)
 	assert.Nil(t, err)
+
+	if expiration != "" {
+		q := req.URL.Query()
+		q.Add("expiration", expiration)
+		req.URL.RawQuery = q.Encode()
+	}
 
 	if apiKey != "" {
 		req.Header.Add("Authorization", apiKey)
@@ -332,7 +338,7 @@ func httpCall(t *testing.T, httpMethod string, url string, contentType string, a
 func getHealthCheck(t *testing.T, host string) (int, string) {
 	endpoint := "http://" + host + "/"
 
-	statusCode, body := httpCall(t, http.MethodGet, endpoint, "", "", -1, nil)
+	statusCode, body := httpCall(t, http.MethodGet, endpoint, "", "", -1, nil, "")
 
 	version := getFieldFromJSON(t, body, "version")
 
@@ -345,12 +351,13 @@ func getHealthCheck(t *testing.T, host string) (int, string) {
 // host : localhost:8080
 // key : bucket/folder/file.txt
 // apiKey : authorization key
+// expiration : link expiration duration
 // returns the http status, the url and if any an error
-func getPresignedURL(t *testing.T, method string, host string, key string, apiKey string) (int, string) {
+func getPresignedURL(t *testing.T, method string, host string, key string, apiKey string, expiration string) (int, string) {
 
 	endpoint := "http://" + host + "/api/v1/presigned/url/" + key
 
-	statusCode, body := httpCall(t, method, endpoint, "", apiKey, -1, nil)
+	statusCode, body := httpCall(t, method, endpoint, "", apiKey, -1, nil, expiration)
 
 	url := getFieldFromJSON(t, body, "url")
 
@@ -365,7 +372,7 @@ func uploadFile(t *testing.T, url string, apiKey string) (int, *os.File) {
 
 	uploadedFile, size := createTempFileInMB(t, 10) // 10MB
 
-	statusCode, _ := httpCall(t, http.MethodPut, url, "binary/octet-stream", apiKey, size, uploadedFile)
+	statusCode, _ := httpCall(t, http.MethodPut, url, "binary/octet-stream", apiKey, size, uploadedFile, "")
 
 	return statusCode, uploadedFile
 }
@@ -378,7 +385,7 @@ func downloadFile(t *testing.T, url string, apiKey string) (int, *os.File) {
 
 	file, _ := createTempFileInMB(t, 0)
 
-	statusCode, binary := httpCall(t, http.MethodGet, url, "binary/octet-stream", apiKey, -1, nil)
+	statusCode, binary := httpCall(t, http.MethodGet, url, "binary/octet-stream", apiKey, -1, nil, "")
 
 	_, err := io.Copy(file, bytes.NewReader(binary))
 	assert.Nil(t, err)
@@ -395,7 +402,7 @@ func deleteFile(t *testing.T, host string, key string, apiKey string) int {
 
 	endpoint := "http://" + host + "/api/v1/object/" + key
 
-	statusCode, _ := httpCall(t, http.MethodDelete, endpoint, "", apiKey, -1, nil)
+	statusCode, _ := httpCall(t, http.MethodDelete, endpoint, "", apiKey, -1, nil, "")
 
 	return statusCode
 }
@@ -410,7 +417,7 @@ func deleteBatchFile(t *testing.T, host string, bucket string, keys []string, ap
 
 	endpoint := "http://" + host + "/api/v1/object/delete/" + bucket
 
-	statusCode, _ := httpCall(t, http.MethodPost, endpoint, "application/x-www-form-urlencoded", apiKey, int64(len(data.Encode())), strings.NewReader(data.Encode()))
+	statusCode, _ := httpCall(t, http.MethodPost, endpoint, "application/x-www-form-urlencoded", apiKey, int64(len(data.Encode())), strings.NewReader(data.Encode()), "")
 
 	return statusCode
 }
@@ -435,7 +442,7 @@ func copyFile(t *testing.T, host string, sourceBucket string, sourceKey string, 
 
 	endpoint := fmt.Sprintf("http://%v/api/v1/object/copy/%v%v%v", host, sourceBucket, sourceKey, queryParams)
 
-	statusCode, body := httpCall(t, http.MethodPost, endpoint, "", apiKey, -1, nil)
+	statusCode, body := httpCall(t, http.MethodPost, endpoint, "", apiKey, -1, nil, "")
 
 	msg := getFieldFromJSON(t, body, "error")
 
@@ -443,19 +450,21 @@ func copyFile(t *testing.T, host string, sourceBucket string, sourceKey string, 
 }
 
 // Wrapper for presigned URL
-func getPresignedURLForUpload(t *testing.T, host string, key string, apiKey string) (int, string) {
-	return getPresignedURL(t, http.MethodPost, host, key, apiKey)
+func getPresignedURLForUpload(t *testing.T, host string, key string, apiKey string, expiration string) (int, string) {
+	return getPresignedURL(t, http.MethodPost, host, key, apiKey, expiration)
 }
 
 // Wrapper for presigned URL
-func getPresignedURLForDownload(t *testing.T, host string, key string, apiKey string) (int, string) {
-	return getPresignedURL(t, http.MethodGet, host, key, apiKey)
+func getPresignedURLForDownload(t *testing.T, host string, key string, apiKey string, expiration string) (int, string) {
+	return getPresignedURL(t, http.MethodGet, host, key, apiKey, expiration)
 }
 
 // checkUpload checks upload scenario : get presigned url + upload a file
-func checkUpload(t *testing.T, s3proxyHost string, fullKey string) *os.File {
+func checkUpload(t *testing.T, s3proxyHost string, fullKey string, expiration string) *os.File {
 	// create presigned url for uploading the file
-	statusCode, uploadURL := getPresignedURLForUpload(t, s3proxyHost, fullKey, ServerAPIKey)
+	statusCode, uploadURL := getPresignedURLForUpload(t, s3proxyHost, fullKey, ServerAPIKey, expiration)
+
+	checkExpiration(t, uploadURL, expiration)
 
 	// should return 200
 	require.Equal(t, http.StatusOK, statusCode)
@@ -473,9 +482,11 @@ func checkUpload(t *testing.T, s3proxyHost string, fullKey string) *os.File {
 }
 
 // checkDownload checks download scenario : get presigned url + download the file
-func checkDownload(t *testing.T, s3proxyHost string, fullKey string, statusCodeToCheck int) *os.File {
+func checkDownload(t *testing.T, s3proxyHost string, fullKey string, statusCodeToCheck int, expiration string) *os.File {
 	// create presigned url for downloading the file
-	statusCode, downloadURL := getPresignedURLForDownload(t, s3proxyHost, fullKey, ServerAPIKey)
+	statusCode, downloadURL := getPresignedURLForDownload(t, s3proxyHost, fullKey, ServerAPIKey, expiration)
+
+	checkExpiration(t, downloadURL, expiration)
 
 	// should return 200
 	require.Equal(t, http.StatusOK, statusCode)
@@ -492,6 +503,27 @@ func checkDownload(t *testing.T, s3proxyHost string, fullKey string, statusCodeT
 	return downloadedFile
 }
 
+func checkExpiration(t *testing.T, uploadURL string, expiration string) {
+
+	parsedURL, err := url.Parse(uploadURL)
+	require.NoError(t, err)
+	expiresFromURLParam := parsedURL.Query().Get("X-Amz-Expires")
+	expiresFromURL, err := strconv.ParseInt(expiresFromURLParam, 10, 64)
+	require.NoError(t, err)
+
+	if expiration != "" {
+		duration, err := time.ParseDuration(expiration)
+		require.NoError(t, err)
+
+		expectedExpiration := int64(duration.Seconds())
+		require.Equal(t, expectedExpiration, expiresFromURL)
+
+	} else {
+		// default duration is 15m, so 900s
+		require.Equal(t, int64(900), expiresFromURL)
+	}
+}
+
 // checkDownload checks copy scenario
 func checkCopy(t *testing.T, s3proxyHost string, sourceBucket string, sourceKey string, destBucket string, destKey string) {
 	// copy the file
@@ -503,10 +535,10 @@ func checkCopy(t *testing.T, s3proxyHost string, sourceBucket string, sourceKey 
 	// should be empty, no error
 	require.Empty(t, message)
 
-	sourceFile := checkUpload(t, s3proxyHost, sourceBucket+sourceKey)
+	sourceFile := checkUpload(t, s3proxyHost, sourceBucket+sourceKey, "")
 	defer os.Remove(sourceFile.Name())
 
-	destinationFile := checkDownload(t, s3proxyHost, destBucket+destKey, http.StatusOK)
+	destinationFile := checkDownload(t, s3proxyHost, destBucket+destKey, http.StatusOK, "")
 	defer os.Remove(destinationFile.Name())
 
 	// Verify the files are the same
@@ -520,7 +552,7 @@ func checkDelete(t *testing.T, s3proxyHost string, fullKey string) {
 
 	// Last check, try to download again the file
 	// should return 404 because the file has been deleted
-	checkDownload(t, s3proxyHost, fullKey, http.StatusNotFound)
+	checkDownload(t, s3proxyHost, fullKey, http.StatusNotFound, "")
 }
 
 // checkDelete checks delete scenario : delete the file + try to download again => should return 404
@@ -531,7 +563,7 @@ func checkBatchDelete(t *testing.T, s3proxyHost string, bucket string, keys []st
 	for _, key := range keys {
 		// Last check, try to download again the file
 		// should return 404 because the file has been deleted
-		file := checkDownload(t, s3proxyHost, bucket+key, http.StatusNotFound)
+		file := checkDownload(t, s3proxyHost, bucket+key, http.StatusNotFound, "")
 		defer os.Remove(file.Name())
 	}
 }
@@ -551,20 +583,31 @@ func RunSimpleScenarioForS3proxy(t *testing.T, s3proxyHost string) {
 	fullKey := bucket + key
 
 	// UPLOAD a temporary file to the s3 backend
-	uploadedFile := checkUpload(t, s3proxyHost, fullKey)
+	uploadedFile := checkUpload(t, s3proxyHost, fullKey, "")
 	defer os.Remove(uploadedFile.Name())
 
 	// DOWNLOAD the file previously uploaded
-	downloadedFile := checkDownload(t, s3proxyHost, fullKey, http.StatusOK)
+	downloadedFile := checkDownload(t, s3proxyHost, fullKey, http.StatusOK, "")
 	defer os.Remove(downloadedFile.Name())
 
 	// Verify the files are the same
 	require.True(t, verifyFileCheckSumEquality(t, uploadedFile, downloadedFile))
 
+	// UPLOAD a temporary file to the s3 backend with expiration
+	getUploadFileWithExpiration := checkUpload(t, s3proxyHost, fullKey, "25m")
+	defer os.Remove(getUploadFileWithExpiration.Name())
+
+	// DOWNLOAD the file previously uploaded with expiration
+	getDownloadFileWithExpiration := checkDownload(t, s3proxyHost, fullKey, http.StatusOK, "25m")
+	defer os.Remove(getDownloadFileWithExpiration.Name())
+
+	// Verify the expiration param is taken into account
+	require.True(t, verifyFileCheckSumEquality(t, getUploadFileWithExpiration, getDownloadFileWithExpiration))
+
 	// COPY objects
 	checkCopy(t, s3proxyHost, bucket, key, bucket, key+"2")
 
-	copiedFile := checkDownload(t, s3proxyHost, fullKey+"2", http.StatusOK)
+	copiedFile := checkDownload(t, s3proxyHost, fullKey+"2", http.StatusOK, "")
 	defer os.Remove(copiedFile.Name())
 
 	// DELETE object
