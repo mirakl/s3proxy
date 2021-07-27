@@ -49,6 +49,11 @@ Clone the project : `git clone git@github.com:mirakl/s3proxy.git` and run `make`
 * run `make docker-image-push`
 
 
+## Add a new release
+
+You only need to add a tag version in this repo without "v". [Dockerhub](https://hub.docker.com/repository/docker/mirakl/s3proxy) will see this tag and create a new artefact (docker image).
+
+
 ## s3proxy Configuration
 
 You can use environment variables or command line options for configuration.
