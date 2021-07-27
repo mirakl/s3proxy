@@ -26,8 +26,8 @@ RUN git clone https://github.com/mirakl/dns-aaaa-no-more.git && \
 FROM centos:latest
 
 COPY --from=lib-builder /root/dns-aaaa-no-more/getaddrinfo.so /dns-aaaa-no-more/
-COPY --from=app-builder /s3proxy /bin
-RUN chmod +x /bin/s3proxy
+COPY --from=app-builder /s3proxy /usr/bin/
+RUN chmod +x /usr/bin/s3proxy
 
 EXPOSE 8080
 
