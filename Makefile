@@ -2,7 +2,7 @@ NAME = s3proxy
 REMOTE_NAME = ${REGISTRY}${NAME}
 
 GOPATH ?= ${HOME}/go
-VERSION ?= 1.4.1
+VERSION ?= 1.4.2
 
 LDFLAGS=-ldflags "-X main.version=${VERSION}"
 
@@ -58,12 +58,12 @@ endif
 tools.goimports:
 	@command -v goimports >/dev/null ; if [ $$? -ne 0 ]; then \
 		echo "--> installing goimports"; \
-		go get golang.org/x/tools/cmd/goimports; \
+		go install golang.org/x/tools/cmd/goimports@latest; \
 	fi
 
 tools.golangci-lint:
 	@command -v bin/golangci-lint >/dev/null ; if [ $$? -ne 0 ]; then \
 		echo "--> installing golangci-lint"; \
-		curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.30.0; \
+		curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.44.0; \
 	fi
 .PHONY: test

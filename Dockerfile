@@ -1,9 +1,7 @@
-FROM golang:1.15-buster as app-builder
+FROM golang:1.16-alpine as app-builder
 
 ENV SRC_DIR /s3proxy
 WORKDIR $SRC_DIR
-
-RUN curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.30.0
 
 ENV GO111MODULE on
 
@@ -13,17 +11,21 @@ RUN go mod download
 
 COPY . ./
 
-RUN make 
+RUN apk add build-base curl && make
 
-FROM golang:1.15-buster as lib-builder
+
+FROM golang:1.16-alpine as lib-builder
 
 WORKDIR /root
-RUN git clone https://github.com/mirakl/dns-aaaa-no-more.git && \
-    cd dns-aaaa-no-more && \
-    make
+RUN apk add git
+RUN git clone https://github.com/mirakl/dns-aaaa-no-more.git
+RUN apk add build-base && cd dns-aaaa-no-more && make
 
 
-FROM centos:latest
+FROM alpine:3.15
+
+# Magic !
+RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 
 COPY --from=lib-builder /root/dns-aaaa-no-more/getaddrinfo.so /dns-aaaa-no-more/
 COPY --from=app-builder /s3proxy/s3proxy /usr/bin/

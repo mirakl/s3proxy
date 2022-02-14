@@ -1,4 +1,6 @@
 linters:
   enable:
     - goimports
-    - golint
+    - revive
+    - ineffassign
+    - errcheck
