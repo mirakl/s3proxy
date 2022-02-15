@@ -28,8 +28,8 @@ FROM alpine:3.15
 RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 
 COPY --from=lib-builder /root/dns-aaaa-no-more/getaddrinfo.so /dns-aaaa-no-more/
-COPY --from=app-builder /s3proxy/s3proxy /usr/bin/
-RUN chmod +x /usr/bin/s3proxy
+COPY --from=app-builder /s3proxy/s3proxy /usr/local/bin/
+RUN chmod +x /usr/local/bin/s3proxy
 
 EXPOSE 8080
 
@@ -38,4 +38,4 @@ USER nobody
 # To fix DNS issues in K8S caused by conntrack race condition (A/AAAA sent in parallel):
 # - cgo resolver is enforced (see https://golang.org/pkg/net/#hdr-Name_Resolution)
 # - getaddrinfo() C function called by cgo resolver is hooked to a new one not sending AAAA DNS requests
-ENTRYPOINT GODEBUG=netdns=cgo LD_PRELOAD=/dns-aaaa-no-more/getaddrinfo.so exec /bin/s3proxy
+ENTRYPOINT GODEBUG=netdns=cgo LD_PRELOAD=/dns-aaaa-no-more/getaddrinfo.so exec /usr/local/bin/s3proxy
