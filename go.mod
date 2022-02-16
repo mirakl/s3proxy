@@ -1,34 +1,47 @@
 module github.com/mirakl/s3proxy
 
-go 1.12
+go 1.17
 
 require (
-	github.com/BurntSushi/toml v0.3.1 // indirect
-	github.com/aws/aws-sdk-go v1.12.65
-	github.com/fsnotify/fsnotify v1.4.7 // indirect
-	github.com/gin-gonic/gin v1.7.0
-	github.com/go-errors/errors v1.0.1
-	github.com/go-ini/ini v1.32.0 // indirect
-	github.com/hashicorp/hcl v0.0.0-20171017181929-23c074d0eceb // indirect
-	github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8 // indirect
-	github.com/kr/pretty v0.1.0 // indirect
-	github.com/magiconair/properties v1.7.4 // indirect
-	github.com/mitchellh/mapstructure v0.0.0-20180111000720-b4575eea38cc // indirect
-	github.com/op/go-logging v0.0.0-20160211212156-b2cb9fa56473
-	github.com/pelletier/go-toml v1.0.1 // indirect
+	github.com/aws/aws-sdk-go v1.42.53
+	github.com/gin-gonic/gin v1.7.7
+	github.com/go-errors/errors v1.4.2
+	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
+	github.com/spf13/pflag v1.0.5
+	github.com/spf13/viper v1.10.1
+	github.com/stretchr/testify v1.7.0
+	go.uber.org/automaxprocs v1.4.0
+)
+
+require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/fsnotify/fsnotify v1.5.1 // indirect
+	github.com/gin-contrib/sse v0.1.0 // indirect
+	github.com/go-playground/locales v0.14.0 // indirect
+	github.com/go-playground/universal-translator v0.18.0 // indirect
+	github.com/go-playground/validator/v10 v10.10.0 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/leodido/go-urn v1.2.1 // indirect
+	github.com/magiconair/properties v1.8.5 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/mitchellh/mapstructure v1.4.3 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/smartystreets/goconvey v0.0.0-20190710185942-9d28bd7c0945 // indirect
-	github.com/spf13/afero v1.0.2 // indirect
-	github.com/spf13/cast v1.1.0 // indirect
-	github.com/spf13/jwalterweatherman v0.0.0-20180109140146-7c0cea34c8ec // indirect
-	github.com/spf13/pflag v1.0.0
-	github.com/spf13/viper v1.0.0
-	github.com/stretchr/testify v1.4.0
-	go.uber.org/automaxprocs v1.2.0
-	golang.org/x/net v0.0.0-20190628185345-da137c7871d7 // indirect
-	golang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect
-	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
-	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
-	gopkg.in/ini.v1 v1.44.0 // indirect
+	github.com/spf13/afero v1.8.1 // indirect
+	github.com/spf13/cast v1.4.1 // indirect
+	github.com/spf13/jwalterweatherman v1.1.0 // indirect
+	github.com/subosito/gotenv v1.2.0 // indirect
+	github.com/ugorji/go/codec v1.2.6 // indirect
+	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
+	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
+	golang.org/x/text v0.3.7 // indirect
+	google.golang.org/protobuf v1.27.1 // indirect
+	gopkg.in/ini.v1 v1.66.4 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
