@@ -51,7 +51,7 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 
 		url, err := s3Backend.CreatePresignedURLForUpload(backend.BucketObject{BucketName: bucket, Key: key}, urlExpiration)
 		if err != nil {
-			log.Error("Failed to create presigned PutObject URL for %s %s", key, bucket, err)
+			log.Errorf("Failed to create presigned PutObject URL for %s %v", key, bucket, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create PutObject URL for " + key})
 			return
 		}
@@ -76,7 +76,7 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 
 		url, err := s3Backend.CreatePresignedURLForDownload(backend.BucketObject{BucketName: bucket, Key: key}, urlExpiration)
 		if err != nil {
-			log.Error("Failed to create presigned GetObject URL for %s %s", key, bucket, err)
+			log.Errorf("Failed to create presigned GetObject URL for %s %v", key, bucket, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create GetObject URL for " + key})
 			return
 		}
@@ -94,7 +94,7 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 
 		var body DeleteForm
 		if err := c.Bind(&body); err != nil {
-			log.Error("Failed to parse body %s", err)
+			log.Errorf("Failed to parse body %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse body %s " + err.Error()})
 			return
 		}
@@ -113,7 +113,7 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 		err := s3Backend.BatchDeleteObjects(objectsToDelete)
 
 		if err != nil {
-			log.Error("Failed to delete objects %v %s", len(objectsToDelete), bucket, err)
+			log.Errorf("Failed to delete %d objects in bucket %s: %v", len(objectsToDelete), bucket, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete objects " + bucket})
 			return
 		}
@@ -131,7 +131,7 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 		err := s3Backend.DeleteObject(backend.BucketObject{BucketName: bucket, Key: key})
 
 		if err != nil {
-			log.Error("Failed to delete object %s %s", key, bucket, err)
+			log.Errorf("Failed to delete object %s in bucket %s: %v", key, bucket, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete object " + key})
 			return
 		}
@@ -162,7 +162,7 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 			backend.BucketObject{BucketName: destinationBucket, Key: destinationKey})
 
 		if err != nil {
-			log.Error("Failed to copy object %s %s to %s %s %s", sourceBucket, sourceKey, destinationBucket, destinationKey, err)
+			log.Errorf("Failed to copy object %s %s to %s %s: %v", sourceBucket, sourceKey, destinationBucket, destinationKey, err)
 
 			status, msg := http.StatusInternalServerError, fmt.Sprintf("Failed to copy object : sourceBucket=%q, sourceKey=%q", sourceBucket, sourceKey)
 

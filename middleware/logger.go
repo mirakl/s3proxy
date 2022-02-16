@@ -37,7 +37,7 @@ func newLoggerWithWriter(log *logging.Logger, notlogged ...string) gin.HandlerFu
 			statusCode := c.Writer.Status()
 			comment := c.Errors.ByType(gin.ErrorTypeAny).String()
 
-			log.Info("%v | %3d | %13v | %15s | %s %s\n%s",
+			log.Infof("%v | %3d | %13v | %15s | %s %s\n%s",
 				end.Format("2006/01/02 - 15:04:05"),
 				statusCode,
 				latency,
