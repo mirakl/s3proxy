@@ -21,7 +21,7 @@ func newRecoveryWithLogger(log *logging.Logger) gin.HandlerFunc {
 			if err := recover(); err != nil {
 				if log != nil {
 					httprequest, _ := httputil.DumpRequest(c.Request, false)
-					log.Info("[Recovery] panic recovered:%s %s", string(httprequest), err)
+					log.Infof("[Recovery] panic recovered: %s %v", string(httprequest), err)
 				}
 				c.AbortWithStatus(http.StatusInternalServerError)
 			}

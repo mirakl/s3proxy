@@ -77,7 +77,7 @@ func logStartupInfo() {
 
 		return str
 	}
-	log.Info("s3proxy version:%v port:%v rsyslog:%v minio:%v api-key:%v", version,
+	log.Infof("s3proxy version:%v port:%v rsyslog:%v minio:%v api-key:%v", version,
 		viper.GetInt("http-port"),
 		formatFlag(viper.GetString("use-rsyslog"), false),
 		formatFlag(viper.GetString("use-minio"), false),
@@ -91,7 +91,7 @@ func main() {
 	useRsyslog := viper.GetString("use-rsyslog")
 	if useRsyslog != "" {
 		if err := logger.AddRsyslogBackend(useRsyslog); err != nil {
-			log.Error("error %v", err)
+			log.Errorf("error %v", err)
 		}
 	}
 
@@ -115,7 +115,7 @@ func main() {
 		s3Backend, err = backend.NewS3Backend()
 	}
 	if err != nil {
-		log.Error("Failed to intialize S3Backend : %v ", err)
+		log.Errorf("Failed to intialize S3Backend : %v ", err)
 		os.Exit(1)
 	}
 
@@ -133,7 +133,7 @@ func main() {
 
 		// service connections
 		if err := srv.ListenAndServe(); err != nil {
-			log.Error("Error: %s\n", err)
+			log.Errorf("Error: %v", err)
 		}
 	}()
 
@@ -147,7 +147,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server Shutdown : ", err)
+		log.Fatalf("Server Shutdown : %v", err)
 	}
 
 	log.Info("Server exiting")
