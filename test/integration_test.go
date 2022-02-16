@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 // Integration test used for testing s3proxy code of this repository

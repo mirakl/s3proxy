@@ -21,7 +21,7 @@ This presigned URL has a duration period and can be used by any basic HTTP clien
 ## Requirements 
 
 * Docker version 17.12.0+
-* Go 1.12+
+* Go 1.17+
 
 
 ## Build

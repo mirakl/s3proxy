@@ -1,3 +1,4 @@
+//go:build end2end
 // +build end2end
 
 // End to End test used for testing a version of a docker image of s3proxy
