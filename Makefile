@@ -16,8 +16,8 @@ build: clean fmtcheck lint
 clean:
 	if [ -f "${NAME}" ] ; then rm ${NAME} ; fi
 
-lint: tools.golangci-lint
-	bin/golangci-lint --timeout=300s run -v
+lint:
+	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.46.2 golangci-lint run -v
 
 fmtcheck: tools.goimports
 	@echo "--> checking code formatting with 'goimports' tool"
@@ -61,9 +61,4 @@ tools.goimports:
 		go install golang.org/x/tools/cmd/goimports@latest; \
 	fi
 
-tools.golangci-lint:
-	@command -v bin/golangci-lint >/dev/null ; if [ $$? -ne 0 ]; then \
-		echo "--> installing golangci-lint"; \
-		curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.44.0; \
-	fi
 .PHONY: test
