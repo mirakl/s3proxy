@@ -10,7 +10,7 @@ GOFILES	= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 default: build
 
-build: clean fmtcheck lint
+build: clean
 	go build -i -v ${LDFLAGS} -o ${NAME}
 
 clean:
