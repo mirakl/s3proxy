@@ -10,8 +10,9 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/mirakl/s3proxy/backend/s3backend"
+
 	"github.com/gin-gonic/gin"
-	"github.com/mirakl/s3proxy/backend"
 	"github.com/mirakl/s3proxy/logger"
 	"github.com/mirakl/s3proxy/router"
 	"github.com/mirakl/s3proxy/s3proxytest"
@@ -38,7 +39,7 @@ func setupIntegration(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	s3Backend, err := backend.NewS3Backend(s3proxytest.MinioBackendConfig)
+	s3Backend, err := s3backend.New(s3proxytest.MinioBackendConfig)
 	if err != nil {
 		log.Fatal(err)
 	}

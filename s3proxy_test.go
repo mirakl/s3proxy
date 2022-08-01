@@ -7,6 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
+	"github.com/mirakl/s3proxy/backend/s3backend"
+
 	"github.com/gin-gonic/gin"
 	"github.com/mirakl/s3proxy/backend"
 	"github.com/mirakl/s3proxy/backend/backendtest"
@@ -16,7 +20,7 @@ import (
 )
 
 var (
-	s3backend backend.Backend
+	s3Backend backend.Backend
 	r         *gin.Engine
 
 	expiration     = 15 * time.Minute
@@ -33,7 +37,7 @@ var (
 func setup() {
 	var err error
 
-	s3backend, err = backendtest.NewS3FakeBackend(backend.S3BackendConfig{
+	s3Backend, err = backendtest.New(s3backend.Config{
 		Region:    awsRegion,
 		AccessKey: accessKey,
 		SecretKey: secretKey,
@@ -42,7 +46,7 @@ func setup() {
 		os.Exit(1)
 	}
 
-	r = router.NewGinEngine(gin.TestMode, s3proxyVersion, expiration, "", s3backend)
+	r = router.NewGinEngine(gin.TestMode, s3proxyVersion, expiration, "", s3Backend)
 }
 
 func TestMain(m *testing.M) {
@@ -53,8 +57,9 @@ func TestMain(m *testing.M) {
 
 func unmarshallJSON(t *testing.T, bytes []byte) map[string]interface{} {
 	var objmap map[string]interface{}
+
 	err := json.Unmarshal(bytes, &objmap)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 
 	return objmap
 }
@@ -200,7 +205,7 @@ func Test404(t *testing.T) {
 func TestAuthorizationOK(t *testing.T) {
 
 	// create a server with api key protection
-	r = router.NewGinEngine(gin.ReleaseMode, s3proxyVersion, urlExpiration, serverAPIKey, s3backend)
+	r = router.NewGinEngine(gin.ReleaseMode, s3proxyVersion, urlExpiration, serverAPIKey, s3Backend)
 
 	// ping endpoint should not be protected
 	w := s3proxytest.ServeHTTP(t, r, http.MethodGet, "/", "")
@@ -221,7 +226,7 @@ func TestAuthorizationOK(t *testing.T) {
 func TestAuthorization401(t *testing.T) {
 
 	// create a server with api key protection
-	r = router.NewGinEngine(gin.ReleaseMode, s3proxyVersion, urlExpiration, serverAPIKey, s3backend)
+	r = router.NewGinEngine(gin.ReleaseMode, s3proxyVersion, urlExpiration, serverAPIKey, s3Backend)
 
 	// ping endpoint should not be protected
 	w := s3proxytest.ServeHTTP(t, r, http.MethodGet, "/", "")

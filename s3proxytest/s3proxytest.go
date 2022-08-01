@@ -19,13 +19,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mirakl/s3proxy/backend/s3backend"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/gin-gonic/gin"
 	"github.com/go-errors/errors"
-	"github.com/mirakl/s3proxy/backend"
 	logging "github.com/op/go-logging"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,7 +37,7 @@ var (
 
 	URLExpiration      = 15 * time.Minute
 	ServerAPIKey       = "3f300bdc-0028-11e8-ba89-0ed5f89f718b"
-	MinioBackendConfig = backend.S3BackendConfig{
+	MinioBackendConfig = s3backend.Config{
 		Host:             "minio:9000",
 		Region:           "eu-west-1",
 		AccessKey:        "AKIAIOSFODNN7EXAMPLE",
@@ -94,7 +95,7 @@ func WaitForS3proxy(t *testing.T, s3proxyHost string) {
 }
 
 // WaitForBucket is waiting for minio is up and bucket has been created
-func WaitForBucket(t *testing.T, bucketName string, config backend.S3BackendConfig) {
+func WaitForBucket(t *testing.T, bucketName string, config s3backend.Config) {
 
 	s3Config := &aws.Config{
 		Credentials:      credentials.NewStaticCredentials(config.AccessKey, config.SecretKey, ""),

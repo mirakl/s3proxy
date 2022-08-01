@@ -1,10 +1,14 @@
 // S3 implementation for Backend Interface
 
-package backend
+package s3backend
 
 import (
 	"errors"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws/awserr"
+
+	"github.com/mirakl/s3proxy/backend"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -14,7 +18,7 @@ import (
 )
 
 // Config for s3backend for defining Host, Region, etc ...
-type S3BackendConfig struct {
+type Config struct {
 	Host             string
 	Region           string
 	AccessKey        string
@@ -23,23 +27,17 @@ type S3BackendConfig struct {
 	S3ForcePathStyle bool
 }
 
-// s3backend which will implement Backend interface
-type S3Backend struct {
+type impl struct {
 	client *s3.S3
-	config S3BackendConfig
+	config Config
 }
 
-// Create a new backend for s3 compatible backend
-func NewS3Backend(config ...S3BackendConfig) (Backend, error) {
-	return newS3Backend(config)
-}
-
-func newS3Backend(config []S3BackendConfig) (*S3Backend, error) {
-
+// New creates a new backend for s3 compatible backend
+func New(config ...Config) (backend.Backend, error) {
 	var s3Config *aws.Config
-	var s3BackendConfig S3BackendConfig
+	var s3BackendConfig Config
 
-	if len((config)) > 1 {
+	if len(config) > 1 {
 		return nil, errors.New("One config max. allowed")
 	} else if len(config) == 1 {
 		s3BackendConfig = config[0]
@@ -70,54 +68,47 @@ func newS3Backend(config []S3BackendConfig) (*S3Backend, error) {
 	}
 
 	// Create S3 service client
-	return &S3Backend{
+	return &impl{
 		client: s3.New(sess),
 		config: s3BackendConfig,
 	}, nil
 }
 
-// Create a presigned url for an upload of an object
-func (b *S3Backend) CreatePresignedURLForUpload(object BucketObject, expire time.Duration) (string, error) {
+// CreatePresignedURLForUpload creates a presigned url for an upload of an object
+func (b *impl) CreatePresignedURLForUpload(object backend.BucketObject, expire time.Duration) (string, error) {
 	req, _ := b.client.PutObjectRequest(&s3.PutObjectInput{
 		Bucket: aws.String(object.BucketName),
 		Key:    aws.String(object.Key),
 	})
 
-	return req.Presign(expire)
+	res, err := req.Presign(expire)
+	return res, mapErr(err)
 }
 
-// Create a presigned url for a download of an object
-func (b *S3Backend) CreatePresignedURLForDownload(object BucketObject, expire time.Duration) (string, error) {
+// CreatePresignedURLForDownload creates a presigned url for a download of an object
+func (b *impl) CreatePresignedURLForDownload(object backend.BucketObject, expire time.Duration) (string, error) {
 	req, _ := b.client.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(object.BucketName),
 		Key:    aws.String(object.Key),
 	})
 
-	return req.Presign(expire)
+	res, err := req.Presign(expire)
+	return res, mapErr(err)
 }
 
-// Delete action for an object in a bucket
-func (b *S3Backend) DeleteObject(object BucketObject) error {
+// DeleteObject deletes an object in a bucket
+func (b *impl) DeleteObject(object backend.BucketObject) error {
 
 	_, err := b.client.DeleteObject(&s3.DeleteObjectInput{
 		Bucket: aws.String(object.BucketName),
 		Key:    aws.String(object.Key),
 	})
 
-	if err != nil {
-		return err
-	}
-	/* No synchronous wait for now
-	err = b.client.WaitUntilObjectNotExists(&s3.HeadObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-	})
-	*/
-	return nil
+	return mapErr(err)
 }
 
 // BatchDeleteObjects deletes a list of objects in batch mode
-func (b *S3Backend) BatchDeleteObjects(objects []BucketObject) error {
+func (b *impl) BatchDeleteObjects(objects []backend.BucketObject) error {
 	batcher := s3manager.NewBatchDeleteWithClient(b.client)
 
 	objectsToDelete := make([]s3manager.BatchDeleteObject, len(objects))
@@ -135,17 +126,31 @@ func (b *S3Backend) BatchDeleteObjects(objects []BucketObject) error {
 		Objects: objectsToDelete,
 	})
 
-	return err
+	return mapErr(err)
 }
 
 // Copy item from source to destination bucket
-func (b *S3Backend) CopyObject(sourceObject BucketObject, destinationObject BucketObject) error {
+func (b *impl) CopyObject(sourceObject backend.BucketObject, destinationObject backend.BucketObject) error {
 
 	_, err := b.client.CopyObject(&s3.CopyObjectInput{
 		CopySource: aws.String(sourceObject.FullPath()),
 		Bucket:     aws.String(destinationObject.BucketName),
 		Key:        aws.String(destinationObject.Key),
 	})
+
+	return mapErr(err)
+}
+
+func mapErr(err error) error {
+	var e awserr.Error
+	if ok := errors.As(err, &e); ok {
+		switch e.Code() {
+		case s3.ErrCodeNoSuchBucket:
+			return backend.ErrBucketNotFound
+		case s3.ErrCodeNoSuchKey:
+			return backend.ErrObjectNotFound
+		}
+	}
 
 	return err
 }

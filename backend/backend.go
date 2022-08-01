@@ -3,6 +3,8 @@ package backend
 import (
 	"fmt"
 	"time"
+
+	"github.com/go-errors/errors"
 )
 
 // Backend provides an interface for S3
@@ -38,3 +40,8 @@ func (b BucketObject) String() string {
 func (b BucketObject) FullPath() string {
 	return fmt.Sprintf("/%s%s", b.BucketName, b.Key)
 }
+
+var (
+	ErrBucketNotFound = errors.New("No such bucket")
+	ErrObjectNotFound = errors.New("No such key")
+)

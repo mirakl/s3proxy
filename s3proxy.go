@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mirakl/s3proxy/backend/s3backend"
+
 	"github.com/gin-gonic/gin"
 	"github.com/mirakl/s3proxy/backend"
 	"github.com/mirakl/s3proxy/logger"
@@ -51,6 +53,10 @@ func initViper() {
 	pflag.StringP("minio-secret-key", "s", "", "Minion AccessKey equivalent to a AWS_SECRET_ACCESS_KEY")
 	die(viper.BindPFlag("minio-secret-key", pflag.Lookup("minio-secret-key")))
 	viper.SetDefault("minio-secret-key", "")
+
+	pflag.StringP("gcs-sa", "", "", "Use Google Cloud Storage as backend by specifying the Service Account JSON")
+	die(viper.BindPFlag("gcs-sa", pflag.Lookup("gcs-sa")))
+	viper.SetDefault("gcs-sa", "")
 
 	pflag.Parse()
 
@@ -98,28 +104,32 @@ func main() {
 	addr := fmt.Sprintf(":%d", viper.GetInt("http-port")) // ":8080"
 	serverAPIKey := viper.GetString("api-key")
 
-	var s3Backend backend.Backend
-	var err error
+	var (
+		storage backend.Backend
+		err     error
+	)
 
-	if viper.GetString("use-minio") != "" {
-		minioBackendConfig := backend.S3BackendConfig{
+	switch {
+	case viper.GetString("use-minio") != "":
+		log.Infof("using minio backend")
+		storage, err = s3backend.New(s3backend.Config{
 			Host:             viper.GetString("use-minio"),
 			AccessKey:        viper.GetString("minio-access-key"),
 			SecretKey:        viper.GetString("minio-secret-key"),
 			DisableSSL:       true, // For minio : True
 			S3ForcePathStyle: true, // Form minio : True
-		}
+		})
 
-		s3Backend, err = backend.NewS3Backend(minioBackendConfig)
-	} else {
-		s3Backend, err = backend.NewS3Backend()
+	default:
+		log.Infof("using AWS S3 backend")
+		storage, err = s3backend.New()
 	}
 	if err != nil {
-		log.Errorf("Failed to intialize S3Backend : %v ", err)
+		log.Errorf("Failed to initialize Backend : %v ", err)
 		os.Exit(1)
 	}
 
-	router := router.NewGinEngine(gin.ReleaseMode, version, urlExpiration, serverAPIKey, s3Backend)
+	router := router.NewGinEngine(gin.ReleaseMode, version, urlExpiration, serverAPIKey, storage)
 
 	logStartupInfo()
 
@@ -129,7 +139,7 @@ func main() {
 	}
 
 	go func() {
-		log.Info("Listening ...")
+		log.Infof("Listening on %s...", addr)
 
 		// service connections
 		if err := srv.ListenAndServe(); err != nil {

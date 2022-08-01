@@ -1,12 +1,11 @@
 package router
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/gin-gonic/gin"
 	"github.com/mirakl/s3proxy/backend"
 	"github.com/mirakl/s3proxy/middleware"
@@ -18,7 +17,7 @@ var (
 )
 
 // Create a gin router
-func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, serverAPIKey string, s3Backend backend.Backend) *gin.Engine {
+func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, serverAPIKey string, storage backend.Backend) *gin.Engine {
 
 	gin.SetMode(ginMode)
 
@@ -49,13 +48,14 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 			return
 		}
 
-		url, err := s3Backend.CreatePresignedURLForUpload(backend.BucketObject{BucketName: bucket, Key: key}, urlExpiration)
+		url, err := storage.CreatePresignedURLForUpload(backend.BucketObject{BucketName: bucket, Key: key}, urlExpiration)
 		if err != nil {
 			log.Errorf("Failed to create presigned PutObject URL for %s %v", key, bucket, err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create PutObject URL for " + key})
+			c.JSON(statusFromErr(err), gin.H{"error": fmt.Sprintf("Failed to create PutObject URL for %s/%s: %v", bucket, key, err)})
 			return
 		}
 
+		log.Infof("%q, %q => %s", bucket, key, url)
 		c.JSON(http.StatusOK, gin.H{"url": url})
 	})
 
@@ -74,7 +74,7 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 			return
 		}
 
-		url, err := s3Backend.CreatePresignedURLForDownload(backend.BucketObject{BucketName: bucket, Key: key}, urlExpiration)
+		url, err := storage.CreatePresignedURLForDownload(backend.BucketObject{BucketName: bucket, Key: key}, urlExpiration)
 		if err != nil {
 			log.Errorf("Failed to create presigned GetObject URL for %s %v", key, bucket, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create GetObject URL for " + key})
@@ -110,7 +110,7 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 			}
 		}
 
-		err := s3Backend.BatchDeleteObjects(objectsToDelete)
+		err := storage.BatchDeleteObjects(objectsToDelete)
 
 		if err != nil {
 			log.Errorf("Failed to delete %d objects in bucket %s: %v", len(objectsToDelete), bucket, err)
@@ -128,7 +128,7 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 			key    = c.Param("key")
 		)
 
-		err := s3Backend.DeleteObject(backend.BucketObject{BucketName: bucket, Key: key})
+		err := storage.DeleteObject(backend.BucketObject{BucketName: bucket, Key: key})
 
 		if err != nil {
 			log.Errorf("Failed to delete object %s in bucket %s: %v", key, bucket, err)
@@ -158,25 +158,12 @@ func NewGinEngine(ginMode string, version string, urlExpiration time.Duration, s
 			return
 		}
 
-		err := s3Backend.CopyObject(backend.BucketObject{BucketName: sourceBucket, Key: sourceKey},
+		err := storage.CopyObject(backend.BucketObject{BucketName: sourceBucket, Key: sourceKey},
 			backend.BucketObject{BucketName: destinationBucket, Key: destinationKey})
 
 		if err != nil {
 			log.Errorf("Failed to copy object %s %s to %s %s: %v", sourceBucket, sourceKey, destinationBucket, destinationKey, err)
-
-			status, msg := http.StatusInternalServerError, fmt.Sprintf("Failed to copy object : sourceBucket=%q, sourceKey=%q", sourceBucket, sourceKey)
-
-			if err, ok := err.(awserr.Error); ok {
-				switch err.Code() {
-				case s3.ErrCodeNoSuchBucket:
-					status, msg = http.StatusNotFound, fmt.Sprintf("No such bucket : %q or %q", sourceBucket, destinationBucket)
-				case s3.ErrCodeNoSuchKey:
-					status, msg = http.StatusNotFound, fmt.Sprintf("No such key : %q", sourceKey)
-				}
-			}
-
-			c.JSON(status, gin.H{"error": msg})
-
+			c.JSON(statusFromErr(err), gin.H{"error": fmt.Sprintf("Failed to copy object %s/%s to %s/%s: %v", sourceBucket, sourceKey, destinationBucket, destinationKey, err)})
 			return
 		}
 
@@ -192,4 +179,15 @@ func parseExpiration(s string, fallback time.Duration) (time.Duration, error) {
 	}
 
 	return time.ParseDuration(s)
+}
+
+func statusFromErr(err error) int {
+	switch {
+	case errors.Is(err, backend.ErrBucketNotFound):
+		return http.StatusNotFound
+	case errors.Is(err, backend.ErrObjectNotFound):
+		return http.StatusNotFound
+	default:
+		return http.StatusInternalServerError
+	}
 }
