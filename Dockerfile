@@ -1,4 +1,4 @@
-FROM golang:1.17-alpine as app-builder
+FROM golang:1.21-alpine as app-builder
 
 ENV SRC_DIR /s3proxy
 WORKDIR $SRC_DIR
@@ -14,7 +14,7 @@ COPY . ./
 RUN apk add build-base curl && make
 
 
-FROM golang:1.17-alpine as lib-builder
+FROM golang:1.21-alpine as lib-builder
 
 WORKDIR /root
 RUN apk add git

@@ -1,6 +1,6 @@
 module github.com/mirakl/s3proxy
 
-go 1.17
+go 1.21
 
 require (
 	github.com/aws/aws-sdk-go v1.42.53
