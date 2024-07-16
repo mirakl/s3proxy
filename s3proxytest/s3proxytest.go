@@ -8,7 +8,6 @@ import (
 	jsonlib "encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -26,7 +25,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-errors/errors"
 	"github.com/mirakl/s3proxy/backend"
-	logging "github.com/op/go-logging"
+	"github.com/op/go-logging"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -231,7 +230,7 @@ func verifyFileCheckSumEquality(t *testing.T, file1 *os.File, file2 *os.File) bo
 // if size = 0 => empty file otherwise a file with random characters
 func createTempFileInMB(t *testing.T, size int) (*os.File, int64) {
 
-	file, err := ioutil.TempFile(os.TempDir(), "s3proxy")
+	file, err := os.CreateTemp(os.TempDir(), "s3proxy")
 	assert.Nil(t, err)
 
 	if size > 0 {
@@ -308,7 +307,7 @@ func httpCall(t *testing.T, httpMethod string, url string, contentType string, a
 	}
 
 	if body != nil {
-		req.Body = ioutil.NopCloser(body)
+		req.Body = io.NopCloser(body)
 		req.ContentLength = bodySize
 	}
 
@@ -327,7 +326,7 @@ func httpCall(t *testing.T, httpMethod string, url string, contentType string, a
 
 		statusCode = response.StatusCode
 
-		bytes, err = ioutil.ReadAll(response.Body)
+		bytes, err = io.ReadAll(response.Body)
 		assert.Nil(t, err)
 	}
 
