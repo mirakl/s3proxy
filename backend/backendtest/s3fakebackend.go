@@ -60,6 +60,7 @@ func (b *S3FakeBackend) DeleteObject(object backend.BucketObject) error {
 }
 
 func (b *S3FakeBackend) BatchDeleteObjects(objects []backend.BucketObject) error {
+	_ = objects
 	return nil
 }
 

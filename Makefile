@@ -11,13 +11,13 @@ GOFILES	= $(shell find . -type f -name '*.go' -not -path "./vendor/*")
 default: build
 
 build: clean
-	go build -i -v ${LDFLAGS} -o ${NAME}
+	go build -v ${LDFLAGS} -o ${NAME}
 
 clean:
 	if [ -f "${NAME}" ] ; then rm ${NAME} ; fi
 
 lint:
-	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.46.2 golangci-lint run -v
+	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.59.1 golangci-lint run -v
 
 fmtcheck: tools.goimports
 	@echo "--> checking code formatting with 'goimports' tool"
