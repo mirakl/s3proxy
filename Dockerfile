@@ -1,4 +1,4 @@
-FROM golang:1.17-alpine as app-builder
+FROM golang:1.22-alpine as app-builder
 
 ENV SRC_DIR /s3proxy
 WORKDIR $SRC_DIR
@@ -14,7 +14,7 @@ COPY . ./
 RUN apk add build-base curl && make
 
 
-FROM golang:1.17-alpine as lib-builder
+FROM golang:1.22-alpine as lib-builder
 
 WORKDIR /root
 RUN apk add git
@@ -22,7 +22,7 @@ RUN git clone https://github.com/mirakl/dns-aaaa-no-more.git
 RUN apk add build-base && cd dns-aaaa-no-more && make
 
 
-FROM alpine:3.15
+FROM alpine:3.20
 
 # Magic !
 RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
