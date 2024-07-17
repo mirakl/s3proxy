@@ -13,7 +13,7 @@ import (
 	"github.com/mirakl/s3proxy/backend"
 	"github.com/mirakl/s3proxy/logger"
 	"github.com/mirakl/s3proxy/router"
-	logging "github.com/op/go-logging"
+	"github.com/op/go-logging"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	_ "go.uber.org/automaxprocs"
@@ -120,6 +120,8 @@ func main() {
 	}
 
 	router := router.NewGinEngine(gin.ReleaseMode, version, urlExpiration, serverAPIKey, s3Backend)
+
+	router.RedirectTrailingSlash = false // try to keep the same behavior as gin 1.7
 
 	logStartupInfo()
 

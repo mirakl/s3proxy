@@ -43,6 +43,7 @@ func setup() {
 	}
 
 	r = router.NewGinEngine(gin.TestMode, s3proxyVersion, expiration, "", s3backend)
+	r.RedirectTrailingSlash = false // try to keep the same behavior as gin 1.7
 }
 
 func TestMain(m *testing.M) {
