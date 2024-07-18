@@ -121,7 +121,7 @@ func main() {
 
 	router := router.NewGinEngine(gin.ReleaseMode, version, urlExpiration, serverAPIKey, s3Backend)
 
-	router.RedirectTrailingSlash = false // try to keep the same behavior as gin 1.7
+	router.RedirectTrailingSlash = false // return 404 when a <path> is not found instead redirecting to <path> + "/"
 
 	logStartupInfo()
 
