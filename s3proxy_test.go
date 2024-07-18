@@ -43,7 +43,7 @@ func setup() {
 	}
 
 	r = router.NewGinEngine(gin.TestMode, s3proxyVersion, expiration, "", s3backend)
-	r.RedirectTrailingSlash = false // try to keep the same behavior as gin 1.7
+	r.RedirectTrailingSlash = false // return 404 when a <path> is not found instead redirecting to <path> + "/"
 }
 
 func TestMain(m *testing.M) {
