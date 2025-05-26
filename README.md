@@ -1,5 +1,3 @@
-![CI](https://github.com/mirakl/s3proxy/workflows/CI/badge.svg?branch=master)
-
 s3proxy
 =======
 
