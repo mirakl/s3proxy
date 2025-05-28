@@ -19,7 +19,7 @@ services:
     command: ./s3proxy
 
   rsyslog:
-    image: voxxit/rsyslog
+    image: rsyslog/syslog_appliance_alpine
     networks:
       - s3proxy-network
 
