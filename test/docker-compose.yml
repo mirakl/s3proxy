@@ -41,7 +41,7 @@ services:
     entrypoint: >
       /bin/sh -c "
       /bin/sleep 5;
-      /usr/bin/mc config host add myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY;
+      /usr/bin/mc alias set myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY;
       /usr/bin/mc rm -r --force myminio/s3proxy-bucket;
       /usr/bin/mc mb myminio/s3proxy-bucket;
       /usr/bin/mc policy download myminio/s3proxy-bucket;
