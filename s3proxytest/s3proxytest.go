@@ -67,7 +67,7 @@ func WaitForRessources(t *testing.T, s3proxyHost string) {
 
 	go func() {
 		for i := range messages {
-			log.Debug("Available ressource : %v", i)
+			log.Debugf("Available ressource : %v", i)
 		}
 	}()
 
@@ -84,7 +84,7 @@ func WaitForS3proxy(t *testing.T, s3proxyHost string) {
 			return
 		}
 
-		log.Debug("Waiting for s3proxy '%s' ...", s3proxyHost)
+		log.Debugf("Waiting for s3proxy '%s' ...", s3proxyHost)
 
 		time.Sleep(3 * time.Second)
 	}
@@ -121,7 +121,7 @@ func WaitForBucket(t *testing.T, bucketName string, config backend.S3BackendConf
 			}
 		}
 
-		log.Debug("Waiting for bucket '%s' ...", bucketName)
+		log.Debugf("Waiting for bucket '%s' ...", bucketName)
 
 		time.Sleep(3 * time.Second)
 	}
