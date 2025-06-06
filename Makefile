@@ -17,7 +17,7 @@ clean:
 	if [ -f "${NAME}" ] ; then rm ${NAME} ; fi
 
 lint:
-	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v1.59.1 golangci-lint run -v
+	docker run --rm -v $(PWD):/app -w /app golangci/golangci-lint:v2.1.6 golangci-lint run -v
 
 fmtcheck: tools.goimports
 	@echo "--> checking code formatting with 'goimports' tool"

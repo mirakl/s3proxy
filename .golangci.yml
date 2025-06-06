@@ -1,8 +1,6 @@
+version: "2"
 run:
   timeout: 5m
-linters:
+formatters:
   enable:
     - goimports
-    - revive
-    - ineffassign
-    - errcheck

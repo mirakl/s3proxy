@@ -322,7 +322,11 @@ func httpCall(t *testing.T, httpMethod string, url string, contentType string, a
 	var bytes []byte
 
 	if response != nil {
-		defer response.Body.Close()
+		defer func() {
+			if err := response.Body.Close(); err != nil {
+				t.Errorf("failed to close response body while calling %s", url)
+			}
+		}()
 
 		statusCode = response.StatusCode
 
@@ -535,10 +539,18 @@ func checkCopy(t *testing.T, s3proxyHost string, sourceBucket string, sourceKey 
 	require.Empty(t, message)
 
 	sourceFile := checkUpload(t, s3proxyHost, sourceBucket+sourceKey, "")
-	defer os.Remove(sourceFile.Name())
+	defer func() {
+		if err := os.Remove(sourceFile.Name()); err != nil {
+			log.Errorf("failed to remove source file %s: %v", sourceFile.Name(), err)
+		}
+	}()
 
 	destinationFile := checkDownload(t, s3proxyHost, destBucket+destKey, http.StatusOK, "")
-	defer os.Remove(destinationFile.Name())
+	defer func() {
+		if err := os.Remove(destinationFile.Name()); err != nil {
+			log.Errorf("failed to remove destination file %s: %v", destinationFile.Name(), err)
+		}
+	}()
 
 	// Verify the files are the same
 	require.True(t, verifyFileCheckSumEquality(t, sourceFile, destinationFile))
@@ -563,7 +575,11 @@ func checkBatchDelete(t *testing.T, s3proxyHost string, bucket string, keys []st
 		// Last check, try to download again the file
 		// should return 404 because the file has been deleted
 		file := checkDownload(t, s3proxyHost, bucket+key, http.StatusNotFound, "")
-		defer os.Remove(file.Name())
+		defer func() {
+			if err := os.Remove(file.Name()); err != nil {
+				log.Errorf("failed to remove downloaded file %s: %v", file.Name(), err)
+			}
+		}()
 	}
 }
 
@@ -583,22 +599,38 @@ func RunSimpleScenarioForS3proxy(t *testing.T, s3proxyHost string) {
 
 	// UPLOAD a temporary file to the s3 backend
 	uploadedFile := checkUpload(t, s3proxyHost, fullKey, "")
-	defer os.Remove(uploadedFile.Name())
+	defer func() {
+		if err := os.Remove(uploadedFile.Name()); err != nil {
+			log.Errorf("failed to remove uploaded file %s: %v", uploadedFile.Name(), err)
+		}
+	}()
 
 	// DOWNLOAD the file previously uploaded
 	downloadedFile := checkDownload(t, s3proxyHost, fullKey, http.StatusOK, "")
-	defer os.Remove(downloadedFile.Name())
+	defer func() {
+		if err := os.Remove(downloadedFile.Name()); err != nil {
+			log.Errorf("failed to remove downloaded file %s: %v", downloadedFile.Name(), err)
+		}
+	}()
 
 	// Verify the files are the same
 	require.True(t, verifyFileCheckSumEquality(t, uploadedFile, downloadedFile))
 
 	// UPLOAD a temporary file to the s3 backend with expiration
 	getUploadFileWithExpiration := checkUpload(t, s3proxyHost, fullKey, "25m")
-	defer os.Remove(getUploadFileWithExpiration.Name())
+	defer func() {
+		if err := os.Remove(getUploadFileWithExpiration.Name()); err != nil {
+			log.Errorf("failed to remove uploaded file with expiration %s: %v", getUploadFileWithExpiration.Name(), err)
+		}
+	}()
 
 	// DOWNLOAD the file previously uploaded with expiration
 	getDownloadFileWithExpiration := checkDownload(t, s3proxyHost, fullKey, http.StatusOK, "25m")
-	defer os.Remove(getDownloadFileWithExpiration.Name())
+	defer func() {
+		if err := os.Remove(getDownloadFileWithExpiration.Name()); err != nil {
+			log.Errorf("failed to remove downloaded file with expiration %s: %v", getDownloadFileWithExpiration.Name(), err)
+		}
+	}()
 
 	// Verify the expiration param is taken into account
 	require.True(t, verifyFileCheckSumEquality(t, getUploadFileWithExpiration, getDownloadFileWithExpiration))
@@ -607,7 +639,11 @@ func RunSimpleScenarioForS3proxy(t *testing.T, s3proxyHost string) {
 	checkCopy(t, s3proxyHost, bucket, key, bucket, key+"2")
 
 	copiedFile := checkDownload(t, s3proxyHost, fullKey+"2", http.StatusOK, "")
-	defer os.Remove(copiedFile.Name())
+	defer func() {
+		if err := os.Remove(copiedFile.Name()); err != nil {
+			log.Errorf("failed to remove copied file %s: %v", copiedFile.Name(), err)
+		}
+	}()
 
 	// DELETE object
 	checkDelete(t, s3proxyHost, fullKey+"2")
