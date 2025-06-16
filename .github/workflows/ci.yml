@@ -26,7 +26,7 @@ jobs:
         run: make fmtcheck
 
       - name: Linter
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
 
   build:
     name: test
