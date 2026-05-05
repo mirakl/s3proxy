@@ -46,7 +46,7 @@ func setupIntegration(t *testing.T) {
 	router := router.NewGinEngine(gin.ReleaseMode, "9.9.9", s3proxytest.URLExpiration, s3proxytest.ServerAPIKey, s3Backend)
 
 	go func() {
-		log.Debug("Listening on port : %v", listener.Addr())
+		log.Debugf("Listening on port : %v", listener.Addr())
 
 		// serve connections
 		if err := http.Serve(listener, router); err != nil {

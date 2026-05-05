@@ -40,7 +40,7 @@ func newS3Backend(config []S3BackendConfig) (*S3Backend, error) {
 	var s3BackendConfig S3BackendConfig
 
 	if len((config)) > 1 {
-		return nil, errors.New("One config max. allowed")
+		return nil, errors.New("one config max. allowed")
 	} else if len(config) == 1 {
 		s3BackendConfig = config[0]
 		s3Config = &aws.Config{
