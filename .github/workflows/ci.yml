@@ -11,7 +11,7 @@ on:
 jobs:
   lint:
     name: lint
-    runs-on: mirakl-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -30,7 +30,7 @@ jobs:
 
   build:
     name: test
-    runs-on: mirakl-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Set up Go
         uses: actions/setup-go@v6
