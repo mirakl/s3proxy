@@ -1,6 +1,10 @@
 s3proxy
 =======
 
+> [!CAUTION]
+> **We are no longer accepting bug reports or feature requests.**
+> This repository is now archived.
+
 A S3 proxy server between your application and S3 for upload and download of objects. 
 Why use s3proxy ? To centralize credentials and access rights in your application infrastructure.
 
